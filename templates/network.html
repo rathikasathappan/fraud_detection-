@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+{% set page_key = "network" %}
+{% block title %}Fraud Network - FraudGuard{% endblock %}
+{% block page_title %}Fraud Network Explorer{% endblock %}
+{% block page_subtitle %}Shared bank, device, and IP connections{% endblock %}
+{% block head %}
+<style>
+    .network-frame { position: relative; min-height: 28rem; height: min(62vh, 42rem); overflow: hidden; border: 1px solid var(--line); border-radius: var(--control-radius); background: #f8fbf9; }
+    #networkCanvas { position: absolute; inset: 0; }
+    .network-state { position: absolute; inset: 0; z-index: 1; display: grid; place-items: center; padding: 1rem; background: rgba(248,251,249,0.95); text-align: center; }
+    .network-state.d-none { display: none; }
+    .network-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem); gap: 1rem; }
+    .network-legend { display: flex; flex-wrap: wrap; gap: 0.9rem 1.25rem; padding-top: 1rem; }
+    .legend-item { display: inline-flex; align-items: center; gap: 0.45rem; color: var(--muted); font-size: 0.76rem; }
+    .legend-swatch { width: 0.8rem; height: 0.8rem; flex: 0 0 auto; border: 1px solid rgba(23,43,50,0.2); border-radius: 50%; }
+    .detail-row { padding: 0.7rem 0; border-bottom: 1px solid var(--line); }
+    .detail-row:last-child { border-bottom: 0; }
+    .detail-label { color: var(--muted); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; }
+    .detail-value { overflow-wrap: anywhere; font-size: 0.85rem; }
+    @media (max-width: 991.98px) { .network-layout { grid-template-columns: minmax(0,1fr); } .network-frame { height: 55vh; min-height: 22rem; } }
+</style>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+{% endblock %}
+{% block content %}
+{% if lookup_mode %}
+<div class="page-heading">
+    <h1>Explore merchant connections</h1>
+    <p>Enter a merchant ID to inspect its entity graph and shared relationships.</p>
+</div>
+<section class="card mb-4">
+    <div class="card-header"><span>Merchant lookup</span><i class="bi bi-diagram-3 text-secondary" aria-hidden="true"></i></div>
+    <div class="card-body">
+        <form class="row g-3" method="get" action="{{ url_for('network_lookup') }}">
+            <div class="col-12 col-md-8">
+                <label class="form-label" for="merchant_id">Merchant ID</label>
+                <input class="form-control" id="merchant_id" name="merchant_id" placeholder="e.g. M_00013" required>
+            </div>
+            <div class="col-12 col-md-4 d-flex align-items-end">
+                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>Open network</button>
+            </div>
+        </form>
+        <div class="mt-4 pt-3 border-top">
+            <span class="small text-muted fw-bold d-block mb-2">QUICK EXPLORATION PRESETS:</span>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-danger" href="{{ url_for('network_explorer', merchant_id='M_00013') }}"><i class="bi bi-bank me-1"></i>Bank Ring (M_00013)</a>
+                <a class="btn btn-sm btn-outline-warning" href="{{ url_for('network_explorer', merchant_id='M_00022') }}"><i class="bi bi-phone me-1"></i>Device Ring (M_00022)</a>
+                <a class="btn btn-sm btn-outline-danger" href="{{ url_for('network_explorer', merchant_id='M_00119') }}"><i class="bi bi-diagram-3 me-1"></i>Multi-Entity Ring (M_00119)</a>
+                <a class="btn btn-sm btn-outline-warning" href="{{ url_for('network_explorer', merchant_id='M_00029') }}"><i class="bi bi-person-exclamation me-1"></i>Mimic Solo (M_00029)</a>
+                <a class="btn btn-sm btn-outline-success" href="{{ url_for('network_explorer', merchant_id='M_00001') }}"><i class="bi bi-check-circle me-1"></i>Genuine Clean (M_00001)</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% else %}
+<div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1>Merchant Network Graph</h1>
+        <p>Merchant ID: <strong>{{ merchant_id }}</strong></p>
+    </div>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+        <a class="btn btn-outline-primary" href="{{ url_for('risk_assessment', merchant_id=merchant_id) }}">
+            <i class="bi bi-shield-check me-1" aria-hidden="true"></i>View Risk Assessment
+        </a>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Quick Switch Ring
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li><a class="dropdown-item" href="{{ url_for('network_explorer', merchant_id='M_00013') }}">Bank Ring (M_00013)</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('network_explorer', merchant_id='M_00022') }}">Device Ring (M_00022)</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('network_explorer', merchant_id='M_00119') }}">Complex Ring (M_00119)</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('network_explorer', merchant_id='M_00029') }}">Mimic Solo (M_00029)</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('network_explorer', merchant_id='M_00001') }}">Genuine Clean (M_00001)</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+<div class="network-layout" id="networkExplorer" data-merchant-id="{{ merchant_id }}" data-fraud-label="{{ merchant.fraud_label if merchant and merchant.fraud_label is not none else '' }}" data-category="{{ merchant.business_category if merchant else '' }}">
+    <section class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Entity connections <span id="networkCount" class="text-secondary small ms-2"></span></span>
+            <div class="btn-group btn-group-sm" role="group" aria-label="Network controls">
+                <button class="btn btn-outline-secondary" type="button" id="btnFitNetwork" title="Fit & Center View"><i class="bi bi-arrows-fullscreen me-1"></i>Fit</button>
+                <button class="btn btn-outline-secondary" type="button" id="btnTogglePhysics" title="Pause or Resume Graph Physics"><i class="bi bi-pause-circle me-1"></i>Physics</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="network-frame">
+                <div id="networkCanvas" aria-label="Interactive merchant relationship graph"></div>
+                <div id="networkLoading" class="network-state"><div class="state-message state-loading"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span>Loading graph…</div></div>
+                <div id="networkEmpty" class="network-state d-none"><div><div class="state-message state-empty justify-content-center"><i class="bi bi-diagram-3"></i>No shared entities or merchants found.</div><a class="btn btn-outline-secondary btn-sm mt-2" href="{{ url_for('network_lookup') }}">Search another merchant</a></div></div>
+                <div id="networkError" class="network-state d-none"><div><div class="state-message state-error justify-content-center"><i class="bi bi-exclamation-circle"></i><span>Graph data could not be loaded.</span></div></div></div>
+            </div>
+            <div class="network-legend" aria-label="Graph legend">
+                <span class="legend-item"><span class="legend-swatch" style="background:#176b5b"></span>Merchant</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:#d19524"></span>Bank account</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:#397c91"></span>Device</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:#6f7a9a"></span>IP address</span>
+                <span class="legend-item"><span class="legend-swatch" style="background:#b63832"></span>Flagged fraud</span>
+            </div>
+        </div>
+    </section>
+    <aside class="card" aria-live="polite">
+        <div class="card-header"><span>Entity details</span></div>
+        <div class="card-body">
+            <div id="nodeDetailsEmpty" class="state-message state-empty"><i class="bi bi-cursor"></i>Select a node to view details.</div>
+            <div id="nodeDetails" class="d-none"></div>
+        </div>
+    </aside>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if not lookup_mode %}
+<script>
+    const merchantId = document.getElementById('networkExplorer').dataset.merchantId;
+    const currentFraudLabel = document.getElementById('networkExplorer').dataset.fraudLabel;
+    const currentCategory = document.getElementById('networkExplorer').dataset.category;
+    const networkStates = ['networkLoading', 'networkEmpty', 'networkError'];
+    const nodeColors = {
+        merchant: '#176b5b',
+        bank_account: '#d19524',
+        device: '#397c91',
+        ip_address: '#6f7a9a',
+        phone: '#74887c',
+        entity: '#8a9b91',
+        flagged: '#b63832'
+    };
+
+    function showNetworkState(stateId) {
+        networkStates.forEach((id) => document.getElementById(id).classList.toggle('d-none', id !== stateId));
+    }
+
+    function addEntityNode(nodes, nodeIndex, entity) {
+        const nodeId = `entity:${entity.entity_type || 'entity'}:${entity.entity_id}`;
+        if (!nodeIndex.has(nodeId)) {
+            nodeIndex.set(nodeId, {
+                id: nodeId,
+                label: String(entity.entity_id),
+                group: entity.entity_type || 'entity',
+                entityType: entity.entity_type || 'entity',
+                entityId: entity.entity_id,
+                relationship: entity.relationship || '',
+                color: nodeColors[entity.entity_type] || nodeColors.entity,
+                shape: 'dot',
+                size: 19
+            });
+            nodes.add(nodeIndex.get(nodeId));
+        }
+        return nodeId;
+    }
+
+    function renderNodeDetails(node) {
+        const details = document.getElementById('nodeDetails');
+        const empty = document.getElementById('nodeDetailsEmpty');
+        details.replaceChildren();
+        empty.classList.add('d-none');
+        details.classList.remove('d-none');
+        const values = node.nodeType === 'merchant' ? [
+            ['Node type', node.isCentral ? 'Current merchant' : 'Shared merchant'],
+            ['Merchant ID', node.merchantId],
+            ['Fraud label', node.fraudLabel === 1 ? 'Flagged fraud' : node.fraudLabel === 0 ? 'Not flagged' : 'Unknown'],
+            ['Business category', node.category || 'Unknown']
+        ] : [
+            ['Node type', node.entityType],
+            ['Entity ID', node.entityId],
+            ['Relationship', node.relationship || 'Shared entity']
+        ];
+        values.forEach(([label, value]) => {
+            const row = document.createElement('div');
+            row.className = 'detail-row';
+            const title = document.createElement('div');
+            title.className = 'detail-label';
+            title.textContent = label;
+            const text = document.createElement('div');
+            text.className = 'detail-value';
+            text.textContent = value ?? '';
+            row.append(title, text);
+            details.appendChild(row);
+        });
+        if (node.nodeType === 'merchant') {
+            const btnWrap = document.createElement('div');
+            btnWrap.className = 'mt-3 pt-2 border-top';
+            const link = document.createElement('a');
+            link.className = 'btn btn-sm btn-primary w-100';
+            link.href = `/risk/${encodeURIComponent(node.merchantId)}`;
+            link.innerHTML = '<i class="bi bi-shield-check me-1"></i>View Risk Assessment';
+            btnWrap.appendChild(link);
+            details.appendChild(btnWrap);
+        }
+    }
+
+    async function loadNetwork() {
+        showNetworkState('networkLoading');
+        if (!window.vis || !window.vis.Network || !window.vis.DataSet) {
+            showNetworkState('networkError');
+            document.querySelector('#networkError span').textContent = 'The network visualization library did not load.';
+            return;
+        }
+        try {
+            const response = await fetch(`/api/graph/${encodeURIComponent(merchantId)}`);
+            if (!response.ok) throw new Error(`Graph request failed (${response.status})`);
+            const graph = await response.json();
+            const entities = graph.connected_entities || [];
+            const peers = (graph.shared_merchants || []).slice(0, 20);
+            if (!entities.length && !peers.length) {
+                document.getElementById('networkCount').textContent = '0 links';
+                showNetworkState('networkEmpty');
+                return;
+            }
+
+            const nodes = new vis.DataSet();
+            const edges = new vis.DataSet();
+            const nodeIndex = new Map();
+            const centralId = `merchant:${merchantId}`;
+            const centralNode = {
+                id: centralId,
+                label: merchantId,
+                nodeType: 'merchant',
+                merchantId,
+                fraudLabel: currentFraudLabel === '' ? null : Number(currentFraudLabel),
+                category: currentCategory,
+                isCentral: true,
+                color: Number(currentFraudLabel) === 1 ? nodeColors.flagged : nodeColors.merchant,
+                shape: 'dot',
+                size: 28,
+                borderWidth: 3,
+                borderWidthSelected: 5
+            };
+            nodeIndex.set(centralId, centralNode);
+            nodes.add(centralNode);
+
+            entities.forEach((entity) => {
+                const entityId = addEntityNode(nodes, nodeIndex, entity);
+                edges.add({ from: centralId, to: entityId, label: entity.relationship || '', color: '#b7c8c0' });
+            });
+
+            peers.forEach((peer) => {
+                const peerId = `merchant:${peer.merchant_id}`;
+                if (!nodeIndex.has(peerId)) {
+                    const flagged = Number(peer.fraud_label) === 1;
+                    const peerNode = {
+                        id: peerId,
+                        label: String(peer.merchant_id),
+                        nodeType: 'merchant',
+                        merchantId: peer.merchant_id,
+                        fraudLabel: peer.fraud_label === undefined ? null : Number(peer.fraud_label),
+                        category: peer.business_category,
+                        isCentral: false,
+                        color: flagged ? nodeColors.flagged : nodeColors.merchant,
+                        shape: 'dot',
+                        size: 20
+                    };
+                    nodeIndex.set(peerId, peerNode);
+                    nodes.add(peerNode);
+                }
+                const entityType = entities.find((entity) => entity.entity_id === peer.entity_id)?.entity_type || peer.entity_type || 'entity';
+                const entityId = addEntityNode(nodes, nodeIndex, {
+                    entity_id: peer.entity_id,
+                    entity_type: entityType,
+                    relationship: peer.relationship
+                });
+                edges.add({ from: peerId, to: entityId, color: Number(peer.fraud_label) === 1 ? '#b63832' : '#b7c8c0' });
+            });
+
+            document.getElementById('networkCount').textContent = `${nodes.get().length} nodes · ${edges.get().length} links`;
+            const network = new vis.Network(
+                document.getElementById('networkCanvas'),
+                { nodes, edges },
+                {
+                    autoResize: true,
+                    interaction: { hover: true, navigationButtons: true, keyboard: true },
+                    nodes: { font: { face: 'DM Sans', color: '#172b32', size: 13 }, borderWidth: 1 },
+                    edges: { smooth: { type: 'dynamic' }, arrows: { to: { enabled: false } }, width: 1.5 },
+                    physics: { stabilization: { iterations: 120 }, barnesHut: { gravitationalConstant: -4500, springLength: 145 } }
+                }
+            );
+            network.on('click', (event) => {
+                if (!event.nodes.length) {
+                    document.getElementById('nodeDetails').classList.add('d-none');
+                    document.getElementById('nodeDetailsEmpty').classList.remove('d-none');
+                    return;
+                }
+                const node = nodeIndex.get(event.nodes[0]);
+                if (node) renderNodeDetails(node);
+            });
+
+            let physicsEnabled = true;
+            const fitBtn = document.getElementById('btnFitNetwork');
+            if (fitBtn) {
+                fitBtn.addEventListener('click', () => {
+                    network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+                });
+            }
+            const togglePhysicsBtn = document.getElementById('btnTogglePhysics');
+            if (togglePhysicsBtn) {
+                togglePhysicsBtn.addEventListener('click', () => {
+                    physicsEnabled = !physicsEnabled;
+                    network.setOptions({ physics: { enabled: physicsEnabled } });
+                    togglePhysicsBtn.innerHTML = physicsEnabled ? '<i class="bi bi-pause-circle me-1"></i>Physics' : '<i class="bi bi-play-circle me-1"></i>Physics';
+                });
+            }
+
+            showNetworkState(null);
+        } catch (_error) {
+            document.querySelector('#networkError span').textContent = 'Graph data could not be loaded. Please try again.';
+            showNetworkState('networkError');
+        }
+    }
+
+    loadNetwork();
+</script>
+{% endif %}
+{% endblock %}

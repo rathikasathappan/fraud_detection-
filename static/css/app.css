@@ -1,0 +1,332 @@
+/*
+ * FraudGuard — app.css
+ * Design-token extensions, utility classes, and polish layer.
+ * Base CSS variables are defined in base.html <style>; this file extends them.
+ */
+
+/* =========================================================================
+   1. EXTENDED DESIGN TOKENS
+   ========================================================================= */
+:root {
+  /* Spacing */
+  --space-xs:  0.25rem;
+  --space-sm:  0.5rem;
+  --space-md:  1rem;
+  --space-lg:  1.5rem;
+  --space-xl:  2rem;
+  --space-2xl: 3rem;
+
+  /* Elevation / shadow */
+  --shadow-sm:  0 1px 3px rgba(23,43,50,0.08), 0 1px 2px rgba(23,43,50,0.04);
+  --shadow-md:  0 4px 12px rgba(23,43,50,0.10), 0 2px 4px rgba(23,43,50,0.06);
+  --shadow-lg:  0 10px 30px rgba(23,43,50,0.12), 0 4px 10px rgba(23,43,50,0.08);
+
+  /* Border radius */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.4rem;
+  --radius-md: 0.5rem;   /* matches --control-radius */
+  --radius-lg: 0.75rem;  /* matches --card-radius */
+  --radius-xl: 1rem;
+  --radius-pill: 999px;
+
+  /* Transitions */
+  --transition-fast:   120ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow:   350ms ease;
+
+  /* Data-source badge colours */
+  --ds-synthetic: #2563eb;
+  --ds-company:   #7c3aed;
+  --ds-api:       #0891b2;
+  --ds-test:      #d97706;
+}
+
+/* =========================================================================
+   2. GLOBAL POLISH
+   ========================================================================= */
+html { scroll-behavior: smooth; }
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Better default for links inside tables */
+.table a { text-decoration: none; }
+.table a:hover { text-decoration: underline; }
+
+/* =========================================================================
+   3. DATA-SOURCE BADGES  (.data-badge)
+   ========================================================================= */
+.data-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.5rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.data-badge.synthetic { background: rgba(37,99,235,0.1);  color: var(--ds-synthetic); }
+.data-badge.company   { background: rgba(124,58,237,0.1); color: var(--ds-company);   }
+.data-badge.api       { background: rgba(8,145,178,0.1);  color: var(--ds-api);       }
+.data-badge.test      { background: rgba(217,119,6,0.1);  color: var(--ds-test);      }
+
+/* =========================================================================
+   4. DEMO MODE BADGE
+   ========================================================================= */
+.demo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: rgba(164,102,8,0.1);
+  border: 1px solid rgba(164,102,8,0.3);
+  color: var(--risk-review);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* =========================================================================
+   5. TOAST NOTIFICATIONS
+   ========================================================================= */
+.toast-stack {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.fg-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  min-width: 18rem;
+  max-width: 26rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  pointer-events: auto;
+  animation: toast-in 220ms var(--transition-normal) both;
+}
+.fg-toast.success { background: var(--risk-approve); }
+.fg-toast.error   { background: var(--risk-hold);    }
+.fg-toast.warning { background: var(--risk-review);  }
+.fg-toast i       { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+.fg-toast .toast-msg { flex: 1; }
+.fg-toast .toast-close {
+  background: none; border: none; color: inherit; opacity: 0.7;
+  cursor: pointer; padding: 0; line-height: 1;
+}
+.fg-toast .toast-close:hover { opacity: 1; }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(0.5rem) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* =========================================================================
+   6. SKELETON LOADERS  (enhanced)
+   ========================================================================= */
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--line) 25%,
+    var(--canvas) 50%,
+    var(--line) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.4s linear infinite;
+}
+@keyframes skeleton-sweep { to { background-position: -200% 0; } }
+
+/* =========================================================================
+   7. SPARKLINE MINI-CHARTS
+   ========================================================================= */
+.sparkline-wrap {
+  display: inline-block;
+  vertical-align: middle;
+}
+.sparkline-wrap canvas {
+  display: block;
+}
+
+/* =========================================================================
+   8. KPI CARD HOVER
+   ========================================================================= */
+.kpi-card {
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  cursor: default;
+}
+.kpi-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* =========================================================================
+   9. CARD POLISH
+   ========================================================================= */
+.card {
+  transition: box-shadow var(--transition-fast);
+}
+.card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+/* =========================================================================
+   10. RISK GAUGE  (SVG-based arc)
+   ========================================================================= */
+.risk-gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+.risk-gauge-wrap svg { overflow: visible; }
+.risk-gauge-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* =========================================================================
+   11. PRINT STYLES
+   ========================================================================= */
+@media print {
+  .app-sidebar, .app-topbar, .app-sidebar-mobile,
+  button, .btn, .signout-link { display: none !important; }
+  .app-main { width: 100% !important; margin-left: 0 !important; }
+  .page-content { padding: 0 !important; }
+  .card { box-shadow: none !important; border: 1px solid #ccc !important; }
+}
+
+/* =========================================================================
+   12. RESPONSIVE TWEAKS
+   ========================================================================= */
+@media (max-width: 575.98px) {
+  .kpi-grid { gap: 0.5rem !important; }
+  .chart-grid { gap: 0.5rem !important; }
+  .page-content { padding: 1rem 0.75rem 2rem !important; }
+}
+
+/* =========================================================================
+   13. LIGHT/DARK THEME OVERRIDES
+   ========================================================================= */
+[data-bs-theme="dark"],
+[data-theme="dark"] {
+  --canvas:  #111c1f;
+  --surface: #1b292d;
+  --ink:     #e7efed;
+  --muted:   #8fa8a3;
+  --line:    #2d4348;
+  --accent:  #3fada0;
+  --accent-dark: #2d8a80;
+
+  /* Keep risk colours visible in dark mode */
+  --risk-approve-soft: rgba(24,130,75,0.2);
+  --risk-review-soft:  rgba(164,102,8,0.2);
+  --risk-hold-soft:    rgba(182,56,50,0.2);
+}
+
+[data-bs-theme="dark"] .app-topbar,
+[data-theme="dark"] .app-topbar {
+  background: rgba(27,41,45,0.97) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select,
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+  background-color: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+[data-bs-theme="dark"] .table,
+[data-theme="dark"] .table {
+  --bs-table-bg: transparent;
+  color: var(--ink);
+}
+
+[data-bs-theme="dark"] .dropzone-box,
+[data-theme="dark"] .dropzone-box {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+/* =========================================================================
+   14. GLOBAL SEARCH IN TOPBAR
+   ========================================================================= */
+.topbar-search .form-control {
+  min-height: 2.2rem;
+  font-size: 0.82rem;
+  background: var(--canvas);
+  border-color: var(--line);
+}
+.topbar-search .form-control:focus {
+  background: var(--surface);
+  border-color: var(--accent);
+}
+.topbar-search .btn {
+  min-height: 2.2rem;
+  padding: 0.3rem 0.6rem;
+}
+
+/* =========================================================================
+   15. BREADCRUMB
+   ========================================================================= */
+.fg-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.fg-breadcrumb a {
+  color: var(--muted);
+  text-decoration: none;
+}
+.fg-breadcrumb a:hover { color: var(--accent); }
+.fg-breadcrumb .sep { opacity: 0.5; }
+
+/* =========================================================================
+   16. THEME TOGGLE BUTTON
+   ========================================================================= */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.theme-toggle:hover {
+  color: var(--ink);
+  border-color: var(--accent);
+}
+.theme-toggle-floating {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1030;
+  background: var(--surface);
+}

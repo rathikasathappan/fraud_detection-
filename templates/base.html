@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}FraudGuard{% endblock %}</title>
+    <script>
+        (function () {
+            let theme = null;
+            try {
+                theme = localStorage.getItem('fg-theme');
+            } catch (error) {
+                console.warn('Theme preference could not be read from local storage.', error);
+            }
+            if (theme !== 'light' && theme !== 'dark') {
+                theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                    ? 'dark'
+                    : 'light';
+            }
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --canvas: #f2f6f4;
+            --surface: #ffffff;
+            --ink: #172b32;
+            --muted: #64757b;
+            --line: #dce6e2;
+            --accent: #176b5b;
+            --accent-dark: #105448;
+            --risk-approve: #18824b;
+            --risk-approve-soft: #e4f4eb;
+            --risk-review: #a46608;
+            --risk-review-soft: #fff2d6;
+            --risk-hold: #b63832;
+            --risk-hold-soft: #fbe9e7;
+            --card-radius: 0.75rem;
+            --control-radius: 0.5rem;
+            --sidebar-width: 16rem;
+        }
+        * { box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: var(--canvas);
+            color: var(--ink);
+            font-family: "DM Sans", sans-serif;
+        }
+        .app-sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1020;
+            display: flex;
+            width: var(--sidebar-width);
+            flex-direction: column;
+            padding: 1.25rem 1rem;
+            background: var(--ink);
+            color: #fff;
+        }
+        .brand-lockup {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 0.2rem 0 2rem;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .brand-mark {
+            display: grid;
+            width: 2.4rem;
+            aspect-ratio: 1;
+            place-items: center;
+            border-radius: 0.65rem;
+            background: var(--accent);
+            color: #fff;
+            font-size: 1.2rem;
+        }
+        .nav-caption {
+            margin: 0 0 0.65rem 0.75rem;
+            color: #a7b6b9;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .app-nav { display: grid; gap: 0.3rem; }
+        .app-nav-link {
+            display: flex;
+            min-height: 2.75rem;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.65rem 0.75rem;
+            border-radius: var(--control-radius);
+            color: #d9e3e1;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .app-nav-link i { width: 1.1rem; font-size: 1.05rem; }
+        .app-nav-link:hover, .app-nav-link.active { background: #29444a; color: #fff; }
+        .app-nav-link.active { box-shadow: inset 3px 0 var(--accent); }
+        .app-nav-link.disabled { cursor: default; opacity: 0.5; }
+        .sidebar-foot {
+            margin-top: auto;
+            padding: 1rem 0.75rem 0;
+            border-top: 1px solid #3b5055;
+            color: #c2cecf;
+            font-size: 0.76rem;
+        }
+        .app-main {
+            width: calc(100% - var(--sidebar-width));
+            min-width: 0;
+            min-height: 100vh;
+            margin-left: var(--sidebar-width);
+        }
+        .app-topbar {
+            position: sticky;
+            top: 0;
+            z-index: 1010;
+            display: flex;
+            min-height: 4.5rem;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.75rem clamp(1rem, 3vw, 2rem);
+            border-bottom: 1px solid var(--line);
+            background: rgba(255,255,255,0.96);
+        }
+        .topbar-title { margin: 0; font-size: 1.05rem; font-weight: 700; }
+        .topbar-subtitle { margin: 0.12rem 0 0; color: var(--muted); font-size: 0.78rem; }
+        .topbar-user { display: flex; align-items: center; gap: 0.75rem; }
+        .user-name { font-size: 0.85rem; font-weight: 600; }
+        .role-chip {
+            padding: 0.28rem 0.55rem;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: var(--canvas);
+            color: var(--muted);
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .signout-link {
+            display: inline-flex;
+            min-height: 2.35rem;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.7rem;
+            border: 1px solid var(--line);
+            border-radius: var(--control-radius);
+            color: var(--ink);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .signout-link:hover { border-color: var(--accent); color: var(--accent); }
+        .page-content { width: 100%; max-width: 94rem; min-width: 0; margin: 0 auto; padding: 1.5rem clamp(1rem, 3vw, 2rem) 2.5rem; }
+        .page-heading { margin-bottom: 1.35rem; }
+        .page-heading h1 { margin: 0; font-size: clamp(1.35rem, 2vw, 1.75rem); font-weight: 700; }
+        .page-heading p { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.9rem; }
+        .card {
+            border: 1px solid var(--line);
+            border-radius: var(--card-radius);
+            background: var(--surface);
+            box-shadow: 0 0.35rem 1.1rem rgba(23,43,50,0.045);
+        }
+        .card-header {
+            display: flex;
+            min-height: 3.5rem;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--line);
+            border-radius: var(--card-radius) var(--card-radius) 0 0;
+            background: var(--surface);
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+        .card-body { padding: 1rem; }
+        .stat-value { color: var(--ink); font-size: 1.8rem; font-weight: 700; line-height: 1.1; }
+        .stat-label { margin-top: 0.4rem; color: var(--muted); font-size: 0.78rem; }
+        .risk-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.32rem 0.62rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .risk-approve { background: var(--risk-approve-soft); color: var(--risk-approve); }
+        .risk-review { background: var(--risk-review-soft); color: var(--risk-review); }
+        .risk-hold { background: var(--risk-hold-soft); color: var(--risk-hold); }
+        .risk-track { height: 0.55rem; overflow: hidden; border-radius: 999px; background: #e8eeeb; }
+        .risk-bar { height: 100%; border-radius: inherit; transition: width 180ms ease; }
+        .risk-bar.risk-approve { background: var(--risk-approve); }
+        .risk-bar.risk-review { background: #d19524; }
+        .risk-bar.risk-hold { background: var(--risk-hold); }
+        .state-message { display: flex; min-height: 3rem; align-items: center; gap: 0.6rem; color: var(--muted); font-size: 0.85rem; }
+        .state-message.state-error { color: var(--risk-hold); }
+        .state-message.state-empty { color: var(--muted); }
+        .state-message.state-loading { color: var(--accent); }
+        .table-responsive { min-height: 8rem; }
+        .table { --bs-table-bg: transparent; margin: 0; font-size: 0.82rem; }
+        .table thead th { color: var(--muted); font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .form-label { margin-bottom: 0.35rem; color: var(--ink); font-size: 0.78rem; font-weight: 600; }
+        .form-control, .form-select { min-height: 2.65rem; border-color: var(--line); border-radius: var(--control-radius); font-size: 0.86rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 0.2rem rgba(23,107,91,0.14); }
+        .btn-primary { --bs-btn-bg: var(--accent); --bs-btn-border-color: var(--accent); --bs-btn-hover-bg: var(--accent-dark); --bs-btn-hover-border-color: var(--accent-dark); border-radius: var(--control-radius); font-weight: 600; }
+        .btn-outline-secondary { --bs-btn-border-color: var(--line); --bs-btn-color: var(--ink); --bs-btn-hover-bg: var(--canvas); --bs-btn-hover-color: var(--ink); --bs-btn-hover-border-color: var(--line); border-radius: var(--control-radius); }
+        .metric-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(7rem,auto) auto; align-items: center; gap: 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid var(--line); font-size: 0.8rem; }
+        .metric-row:last-child { border-bottom: 0; }
+        .metric-group { color: var(--muted); font-size: 0.72rem; }
+        .metric-value { font-variant-numeric: tabular-nums; font-weight: 700; }
+        .assessment-json { max-height: 20rem; overflow: auto; margin: 0; padding: 1rem; border-radius: var(--control-radius); background: #172b32; color: #d9e8e4; font-size: 0.73rem; }
+        .auth-main { min-height: 100vh; display: grid; place-items: center; padding: 1rem; }
+        @media (max-width: 991.98px) {
+            .app-main { width: 100%; margin-left: 0; }
+            .app-topbar { min-height: 4rem; }
+            .app-sidebar-mobile { --bs-offcanvas-width: min(84vw, 18rem); background: var(--ink); color: white; }
+            .app-sidebar-mobile .btn-close { filter: invert(1); }
+        }
+        @media (max-width: 575.98px) {
+            .topbar-user { gap: 0.45rem; }
+            .user-name { max-width: 6.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .signout-link .signout-label { display: none; }
+            .metric-row { grid-template-columns: minmax(0,1fr) auto; }
+            .metric-group { grid-column: 1; grid-row: 2; }
+            .metric-value { grid-column: 2; grid-row: 1 / span 2; }
+        }
+    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+{% set app_user = session.get('user', {}) %}
+{% set app_role = app_user.get('role', '') %}
+{% macro sidebar_links(active_page, user_role) %}
+    {% set links = [
+        {'label': 'Dashboard', 'icon': 'bi-grid-1x2', 'href': url_for('home'), 'page': 'dashboard', 'roles': ['Admin', 'Investigator', 'Analyst'], 'available': true},
+        {'label': 'Onboarding', 'icon': 'bi-person-plus', 'href': url_for('onboarding'), 'page': 'onboarding', 'roles': ['Admin', 'Investigator'], 'available': true},
+        {'label': 'Risk Assessment', 'icon': 'bi-shield-check', 'href': url_for('risk_lookup'), 'page': 'risk', 'roles': ['Admin', 'Investigator', 'Analyst'], 'available': true},
+        {'label': 'Fraud Network', 'icon': 'bi-diagram-3', 'href': url_for('network_lookup'), 'page': 'network', 'roles': ['Admin', 'Investigator', 'Analyst'], 'available': true},
+        {'label': 'Alerts', 'icon': 'bi-bell', 'href': url_for('alerts_page'), 'page': 'alerts', 'roles': ['Admin', 'Investigator'], 'available': true},
+        {'label': 'Upload', 'icon': 'bi-cloud-arrow-up', 'href': url_for('upload_page'), 'page': 'upload', 'roles': ['Admin'], 'available': true},
+        {'label': 'Model Performance', 'icon': 'bi-bar-chart-line', 'href': url_for('model_performance_page'), 'page': 'models', 'roles': ['Admin', 'Investigator', 'Analyst'], 'available': true},
+        {'label': 'Audit Log', 'icon': 'bi-journal-text', 'href': url_for('audit_log_page'), 'page': 'audit_log', 'roles': ['Admin', 'Investigator'], 'available': true}
+    ] %}
+    <nav class="app-nav" aria-label="Primary navigation">
+        {% for link in links if user_role in link.roles %}
+        <a class="app-nav-link{% if link.page == active_page %} active{% endif %}{% if not link.available %} disabled{% endif %}"
+           href="{{ link.href }}"{% if not link.available %} aria-disabled="true" tabindex="-1"{% endif %}>
+            <i class="bi {{ link.icon }}" aria-hidden="true"></i><span>{{ link.label }}</span>
+        </a>
+        {% endfor %}
+    </nav>
+{% endmacro %}
+
+{% if show_shell|default(true) %}
+<aside class="app-sidebar d-none d-lg-flex" aria-label="Application sidebar">
+    <a class="brand-lockup" href="{{ url_for('home') }}">
+        <span class="brand-mark"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+        <span>FraudGuard</span>
+    </a>
+    <div class="nav-caption">Workspace</div>
+    {{ sidebar_links(page_key|default('dashboard'), app_role) }}
+    <div class="sidebar-foot">Merchant risk operations</div>
+</aside>
+
+<div class="offcanvas offcanvas-start app-sidebar-mobile d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header">
+        <a class="brand-lockup mb-0" href="{{ url_for('home') }}" id="mobileSidebarLabel">
+            <span class="brand-mark"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+            <span>FraudGuard</span>
+        </a>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close navigation"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column">
+        <div class="nav-caption">Workspace</div>
+        {{ sidebar_links(page_key|default('dashboard'), app_role) }}
+    </div>
+</div>
+
+<main class="app-main">
+    <header class="app-topbar">
+        <div class="d-flex align-items-center gap-3">
+            <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="Open navigation">
+                <i class="bi bi-list" aria-hidden="true"></i>
+            </button>
+            <div>
+                <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                <p class="topbar-subtitle d-none d-sm-block">{% block page_subtitle %}Cold-start merchant risk operations{% endblock %}</p>
+            </div>
+        </div>
+        <div class="topbar-user">
+            <form class="topbar-search d-none d-md-flex gap-2 align-items-center me-2" method="get" action="{{ url_for('risk_lookup') }}" role="search" aria-label="Search merchants">
+                <input class="form-control" style="width:13rem" name="merchant_id" placeholder="Search merchant ID…" aria-label="Merchant ID">
+                <button class="btn btn-outline-secondary" type="submit" aria-label="Search"><i class="bi bi-search" aria-hidden="true"></i></button>
+            </form>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark theme" title="Toggle theme"><i class="bi bi-moon" id="themeIcon" aria-hidden="true"></i></button>
+            <span class="user-name">{{ app_user.get('username', '') }}</span>
+            <span class="role-chip">{{ app_role }}</span>
+            <a class="signout-link" href="{{ url_for('logout') }}" aria-label="Sign out">
+                <i class="bi bi-box-arrow-right" aria-hidden="true"></i><span class="signout-label">Sign Out</span>
+            </a>
+        </div>
+    </header>
+{% else %}
+<main class="auth-main">
+    {% if request.endpoint == 'login' %}
+    <button class="theme-toggle theme-toggle-floating" id="themeToggle" type="button" aria-label="Switch theme">
+        <i class="bi bi-moon" id="themeIcon" aria-hidden="true"></i>
+    </button>
+    {% endif %}
+{% endif %}
+{% if show_shell|default(true) %}<div class="page-content">{% endif %}
+{% block content %}{% endblock %}
+{% if show_shell|default(true) %}</div></main>{% else %}</main>{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ---- Theme toggle ---- */
+(function(){
+    const root = document.documentElement;
+    const icon = document.getElementById('themeIcon');
+    const btn = document.getElementById('themeToggle');
+    const updateButton = function(theme) {
+        if (!icon || !btn) return;
+        icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon';
+        btn.setAttribute('aria-label', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
+        btn.setAttribute('title', `Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`);
+    };
+    const applyTheme = function(theme, persist) {
+        root.setAttribute('data-bs-theme', theme);
+        updateButton(theme);
+        if (persist) {
+            try {
+                localStorage.setItem('fg-theme', theme);
+            } catch (error) {
+                console.warn('Theme preference could not be saved to local storage.', error);
+            }
+        }
+        window.dispatchEvent(new CustomEvent('fg-theme-change', { detail: { theme: theme } }));
+    };
+    updateButton(root.getAttribute('data-bs-theme') || 'light');
+    if (btn) btn.addEventListener('click', function(){
+        const next = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+        applyTheme(next, true);
+    });
+    if (window.matchMedia) {
+        const colorScheme = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleSystemThemeChange = function(event) {
+            let hasSavedTheme = false;
+            try {
+                hasSavedTheme = localStorage.getItem('fg-theme') === 'light'
+                    || localStorage.getItem('fg-theme') === 'dark';
+            } catch (error) {
+                console.warn('Theme preference could not be read from local storage.', error);
+            }
+            if (!hasSavedTheme) applyTheme(event.matches ? 'dark' : 'light', false);
+        };
+        if (colorScheme.addEventListener) colorScheme.addEventListener('change', handleSystemThemeChange);
+        else if (colorScheme.addListener) colorScheme.addListener(handleSystemThemeChange);
+    }
+})();
+
+/* ---- Toast helper (window.fgToast) ---- */
+window.fgToast = function(message, type, duration){
+    type = type || 'info'; duration = duration || 3500;
+    var stack = document.getElementById('fgToastStack');
+    if (!stack){
+        stack = document.createElement('div');
+        stack.id = 'fgToastStack';
+        stack.className = 'toast-stack';
+        document.body.appendChild(stack);
+    }
+    var icons = {success:'bi-check-circle-fill', error:'bi-exclamation-circle-fill', warning:'bi-exclamation-triangle-fill', info:'bi-info-circle-fill'};
+    var t = document.createElement('div');
+    t.className = 'fg-toast ' + type;
+    t.innerHTML = '<i class="bi ' + (icons[type]||icons.info) + '" aria-hidden="true"></i><span class="toast-msg">' + message + '</span><button class="toast-close" aria-label="Dismiss">&times;</button>';
+    t.querySelector('.toast-close').addEventListener('click', function(){ t.remove(); });
+    stack.appendChild(t);
+    setTimeout(function(){ t.style.transition='opacity 300ms'; t.style.opacity='0'; setTimeout(function(){ t.remove(); }, 320); }, duration);
+};
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

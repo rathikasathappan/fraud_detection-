@@ -1,0 +1,710 @@
+{% extends "base.html" %}
+{% set page_key = "dashboard" %}
+{% block title %}Analytics Dashboard - FraudGuard{% endblock %}
+{% block page_title %}Analytics Dashboard{% endblock %}
+{% block head %}
+<style>
+    :root {
+        --chart-text: var(--ink);
+        --chart-muted: var(--muted);
+        --chart-grid: var(--line);
+        --chart-approve: var(--risk-approve);
+        --chart-review: var(--risk-review);
+        --chart-hold: var(--risk-hold);
+        --chart-accent: var(--accent);
+        --chart-surface: var(--surface);
+    }
+    [data-bs-theme="dark"], [data-theme="dark"] {
+        --chart-text: #e7efed;
+        --chart-muted: #aab9b6;
+        --chart-grid: #3a4b4d;
+        --chart-approve: #57c78a;
+        --chart-review: #f0bd55;
+        --chart-hold: #f0746b;
+        --chart-accent: #65c5ad;
+        --chart-surface: #1b292d;
+    }
+    .dashboard-heading { position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; overflow: hidden; margin-bottom: 1rem; padding: 1.35rem 1.5rem; border: 1px solid rgba(151, 211, 199, 0.18); border-radius: var(--card-radius); background: radial-gradient(ellipse at 86% 0%, rgba(56,156,139,0.2), transparent 36%), linear-gradient(115deg, #102b32, #123d40 58%, #10262f); color: #f2faf8; }
+    .dashboard-heading::after { position: absolute; inset: 0; background: repeating-linear-gradient(130deg, transparent 0 42px, rgba(208,239,231,0.025) 43px 44px); content: ""; pointer-events: none; }
+    .dashboard-heading .page-heading { position: relative; z-index: 1; margin: 0; }
+    .dashboard-heading .page-heading h1 { color: #f5fbf9; }
+    .dashboard-heading .page-heading p { color: #c2d5d3; }
+    .dashboard-eyebrow { margin-bottom: 0.35rem; color: #9ed5c9; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
+    .dashboard-heading .dashboard-actions { position: relative; z-index: 1; }
+    .dashboard-heading .btn-outline-secondary { --bs-btn-color: #e4f0ed; --bs-btn-border-color: rgba(219,239,233,0.38); --bs-btn-hover-bg: rgba(236,249,246,0.12); --bs-btn-hover-color: #fff; --bs-btn-hover-border-color: rgba(219,239,233,0.7); }
+    .dashboard-heading .btn-outline-secondary:hover { color: #fff; }
+    @media (prefers-reduced-motion: no-preference) {
+        .dashboard-heading { background-size: 100% 100%, 220% 100%; animation: dashboard-light-drift 20s ease-in-out infinite alternate; }
+        @keyframes dashboard-light-drift { to { background-position: 0 0, 100% 0; } }
+    }
+    .dashboard-filters { display: grid; grid-template-columns: repeat(3, minmax(9rem, 1fr)) auto; align-items: end; gap: 0.75rem; margin-bottom: 1.1rem; padding: 1rem; border: 1px solid var(--line); border-radius: var(--control-radius); background: var(--surface); }
+    .dashboard-filters .form-label { display: block; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; margin-bottom: 0.9rem; }
+    .kpi-card { min-width: 0; padding: 1rem; border: 1px solid var(--line); border-top: 3px solid var(--chart-accent); border-radius: var(--control-radius); background: var(--surface); }
+    .kpi-card:nth-child(2) { border-top-color: var(--chart-review); }
+    .kpi-card:nth-child(3) { border-top-color: var(--chart-hold); }
+    .kpi-card:nth-child(4) { border-top-color: #3e8b75; }
+    .kpi-card:nth-child(5) { border-top-color: #718b9b; }
+    .kpi-label { color: var(--muted); font-size: 0.76rem; font-weight: 600; }
+    .kpi-value { overflow: hidden; margin-top: 0.35rem; color: var(--ink); font-size: 1.55rem; font-variant-numeric: tabular-nums; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .kpi-trend { display: flex; min-height: 1.2rem; align-items: center; gap: 0.3rem; margin-top: 0.25rem; color: var(--muted); font-size: 0.7rem; }
+    .kpi-trend i { font-size: 0.85rem; }
+    .kpi-trend.up { color: var(--risk-hold); }
+    .kpi-trend.down { color: var(--risk-approve); }
+    .kpi-trend.flat { color: var(--muted); }
+    .chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.8rem; }
+    .chart-panel { min-width: 0; padding: 1.1rem; border: 1px solid var(--line); border-radius: var(--control-radius); background: var(--surface); box-shadow: 0 0.25rem 0.8rem rgba(23, 43, 50, 0.035); }
+    .chart-panel.wide { grid-column: 1 / -1; }
+    .chart-heading { margin-bottom: 0.85rem; }
+    .chart-heading h2 { margin: 0; color: var(--ink); font-size: 0.95rem; font-weight: 700; }
+    .chart-heading p { margin: 0.2rem 0 0; color: var(--muted); font-size: 0.76rem; }
+    .chart-visual { position: relative; min-height: 19rem; height: 19rem; }
+    .chart-visual.decision-summary { display: flex; height: auto; min-height: 19rem; flex-direction: column; justify-content: center; gap: 1.2rem; }
+    .decision-total { color: var(--muted); font-size: 0.82rem; }
+    .decision-total strong { display: block; margin-bottom: 0.15rem; color: var(--ink); font-size: 1.8rem; }
+    .decision-track { display: flex; height: 1.05rem; overflow: hidden; gap: 0.2rem; border-radius: 999px; background: var(--canvas); }
+    .decision-track-segment { min-width: 0.25rem; border-radius: 999px; transition: width 350ms ease; }
+    .decision-breakdown { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.7rem; }
+    .decision-item { min-width: 0; padding: 0.65rem 0.75rem; border: 1px solid var(--line); border-left: 3px solid var(--decision-color); border-radius: var(--control-radius); background: var(--surface); }
+    .decision-item-label { overflow: hidden; color: var(--muted); font-size: 0.73rem; text-overflow: ellipsis; white-space: nowrap; }
+    .decision-item-value { margin-top: 0.2rem; color: var(--ink); font-size: 1.1rem; font-weight: 700; }
+    .decision-item-share { color: var(--muted); font-size: 0.72rem; }
+    .chart-visual.network-visual { height: 30rem; overflow: hidden; border: 1px solid var(--line); border-radius: var(--control-radius); background: var(--canvas); }
+    #sharedGraph { width: 100%; height: 100%; }
+    #sharedGraph canvas { width: 100% !important; height: 100% !important; }
+    .network-chart-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin: 0.3rem 0 0.65rem; color: var(--muted); font-size: 0.74rem; }
+    .network-chart-legend { display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; margin-top: 0.75rem; }
+    .network-chart-legend span { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--muted); font-size: 0.73rem; }
+    .network-chart-legend i { width: 0.65rem; height: 0.65rem; border-radius: 50%; }
+    .heatmap { display: grid; gap: 0.4rem; align-content: center; min-height: 19rem; }
+    .heatmap-row { display: grid; grid-template-columns: minmax(5rem, 0.8fr) repeat(var(--heatmap-columns), minmax(0, 1fr)); gap: 0.45rem; align-items: stretch; }
+    .heatmap-heading { display: grid; place-items: center; min-width: 0; color: var(--muted); font-size: 0.7rem; font-weight: 700; text-align: center; }
+    .heatmap-severity { display: flex; align-items: center; color: var(--ink); font-size: 0.78rem; font-weight: 600; }
+    .heatmap-cell { display: grid; min-height: 3rem; place-items: center; border: 1px solid var(--line); border-radius: var(--control-radius); color: var(--ink); font-size: 0.92rem; font-weight: 700; transition: transform 150ms ease; }
+    .heatmap-cell:hover { transform: translateY(-2px); }
+    .heatmap-legend { display: flex; flex-wrap: wrap; gap: 0.9rem; margin-top: 0.7rem; }
+    .heatmap-legend span { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--muted); font-size: 0.72rem; }
+    .heatmap-legend i { width: 0.65rem; height: 0.65rem; border-radius: 50%; }
+    .chart-visual canvas { width: 100% !important; height: 100% !important; }
+    .chart-state { display: flex; min-height: 19rem; flex-direction: column; justify-content: center; gap: 0.7rem; color: var(--muted); font-size: 0.82rem; }
+    .skeleton-line { height: 0.72rem; border-radius: 0.2rem; background: linear-gradient(90deg, var(--line), var(--canvas), var(--line)); background-size: 200% 100%; animation: chart-shimmer 1.3s linear infinite; }
+    .skeleton-line:nth-child(2) { width: 82%; }
+    .skeleton-line:nth-child(3) { width: 64%; }
+    @keyframes chart-shimmer { to { background-position: -200% 0; } }
+    .table-panel { margin-top: 0.8rem; padding: 1rem; border: 1px solid var(--line); border-radius: var(--control-radius); background: var(--surface); }
+    .table-panel h2 { margin: 0; font-size: 0.95rem; font-weight: 700; }
+    .table-panel > p { margin: 0.2rem 0 0.7rem; color: var(--muted); font-size: 0.76rem; }
+    .merchant-link { font-weight: 700; text-decoration: none; }
+    @media (max-width: 1050px) { .kpi-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (max-width: 700px) {
+        .dashboard-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .dashboard-filters button { grid-column: 1 / -1; }
+        .chart-grid { grid-template-columns: minmax(0, 1fr); }
+        .chart-panel.wide { grid-column: auto; }
+        .chart-visual { min-height: 17rem; height: 17rem; }
+        .chart-visual.decision-summary { min-height: 17rem; }
+        .chart-visual.network-visual { height: 24rem; }
+        .chart-state { min-height: 17rem; }
+        .decision-breakdown { gap: 0.4rem; }
+        .decision-item { padding: 0.55rem; }
+        .heatmap-row { grid-template-columns: minmax(4rem, 0.7fr) repeat(var(--heatmap-columns), minmax(0, 1fr)); gap: 0.3rem; }
+        .heatmap-cell { min-height: 2.6rem; }
+        .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .dashboard-heading { display: block; }
+    }
+    @media (max-width: 390px) { .kpi-grid { grid-template-columns: minmax(0, 1fr); } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-heading flex-wrap">
+    <div class="page-heading">
+        <div class="dashboard-eyebrow"><i class="bi bi-activity me-1" aria-hidden="true"></i>Real-time risk intelligence</div>
+        <h1>Merchant risk analytics</h1>
+        <p>Registration, decision, alert, and shared-entity activity across the selected cohort.</p>
+    </div>
+    <div class="dashboard-actions d-flex flex-wrap gap-2">
+        {% if session.get('user', {}).get('role') in ['Admin', 'Investigator'] %}
+        <a class="btn btn-primary btn-sm" href="{{ url_for('onboarding') }}"><i class="bi bi-person-plus me-1" aria-hidden="true"></i>Onboard Merchant</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('upload_page') }}"><i class="bi bi-cloud-arrow-up me-1" aria-hidden="true"></i>Batch Upload</a>
+        {% endif %}
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('network_lookup') }}"><i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Network Explorer</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('model_performance_page') }}"><i class="bi bi-bar-chart-line me-1" aria-hidden="true"></i>Model Performance</a>
+    </div>
+</div>
+
+<form class="dashboard-filters" id="dashboardFilters">
+    <div><label class="form-label" for="dateFrom">From</label><input class="form-control" id="dateFrom" name="date_from" type="date" required></div>
+    <div><label class="form-label" for="dateTo">To</label><input class="form-control" id="dateTo" name="date_to" type="date" required></div>
+    <div><label class="form-label" for="categoryFilter">Business category</label><select class="form-select" id="categoryFilter" name="category"><option value="">All categories</option></select></div>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Apply filters</button>
+</form>
+
+<div id="dashboardError" class="state-message state-error d-none mb-2" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span></span><button type="button" class="btn btn-sm btn-outline-danger ms-3" onclick="loadDashboard()"><i class="bi bi-arrow-clockwise me-1" aria-hidden="true"></i>Retry</button></div>
+<section class="kpi-grid" aria-label="Key performance indicators" id="kpiGrid">
+    {% for kpi_id, label in [('totalMerchants', 'Total merchants'), ('coldStartShare', 'Cold-start share'), ('holdCount', 'High-risk (Hold)'), ('openAlerts', 'Open alerts'), ('averageRisk', 'Average risk score')] %}
+    <article class="kpi-card"><div class="kpi-label">{{ label }}</div><div class="kpi-value" id="{{ kpi_id }}">--</div><div class="kpi-trend" id="{{ kpi_id }}Trend" aria-live="polite"></div></article>
+    {% endfor %}
+</section>
+
+<section class="chart-grid" aria-label="Merchant risk charts">
+    <article class="chart-panel">
+        <header class="chart-heading"><h2>Decision mix</h2><p>How the latest merchant decisions split across the selected cohort.</p></header>
+        <div class="chart-state" id="decisionState"><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span></div>
+        <div class="chart-visual decision-summary d-none" id="decisionVisual" role="img" aria-label="Merchant decision mix"></div>
+    </article>
+    <article class="chart-panel">
+        <header class="chart-heading"><h2>Daily registrations</h2><p>New merchants by date and latest risk decision.</p></header>
+        <div class="chart-state" id="dailyState"><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span></div>
+        <div class="chart-visual d-none" id="dailyVisual"><canvas id="dailyChart" aria-label="Daily registrations by decision"></canvas></div>
+    </article>
+    <article class="chart-panel wide">
+        <header class="chart-heading"><h2>Category risk map</h2><p>Each bubble is a category: farther right means higher average risk; higher means more merchants on Hold; larger means more merchants.</p></header>
+        <div class="chart-state" id="categoryState"><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span></div>
+        <div class="chart-visual d-none" id="categoryVisual"><canvas id="categoryChart" aria-label="Average risk score and Hold rate by category"></canvas></div>
+    </article>
+    <article class="chart-panel">
+        <header class="chart-heading"><h2>Risk score distribution</h2><p>Assessment volume across risk bands, shown as a continuous profile.</p></header>
+        <div class="chart-state" id="histogramState"><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span></div>
+        <div class="chart-visual d-none" id="histogramVisual"><canvas id="histogramChart" aria-label="Risk score histogram"></canvas></div>
+    </article>
+    <article class="chart-panel">
+        <header class="chart-heading"><h2>Alert workload</h2><p>Severity by status. Darker cells indicate more alerts.</p></header>
+        <div class="chart-state" id="alertsState"><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span></div>
+        <div class="chart-visual d-none" id="alertsVisual" aria-label="Alert counts by severity and status"></div>
+    </article>
+    <article class="chart-panel wide">
+        <header class="chart-heading"><h2>Merchant relationship network</h2><p>Follow the links from each merchant to its bank account, device, and IP. Shared entities connect multiple merchants.</p></header>
+        <div class="chart-state" id="sharedState"><span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span></div>
+        <div class="chart-visual network-visual d-none" id="sharedVisual">
+            <div id="sharedGraph" role="img" aria-label="Merchant and shared entity relationship network"></div>
+        </div>
+        <div class="network-chart-meta d-none" id="sharedNetworkMeta"><span id="sharedNetworkCount"></span><button class="btn btn-sm btn-outline-secondary" type="button" id="sharedFit"><i class="bi bi-arrows-fullscreen me-1" aria-hidden="true"></i>Fit network</button></div>
+        <div class="network-chart-legend d-none" id="sharedNetworkLegend" aria-label="Network graph legend">
+            <span><i style="background:#176b5b"></i>Merchant</span>
+            <span><i style="background:#d19524"></i>Bank account</span>
+            <span><i style="background:#397c91"></i>Device</span>
+            <span><i style="background:#6f7a9a"></i>IP address</span>
+        </div>
+    </article>
+</section>
+
+<section class="table-panel" aria-labelledby="highRiskTitle">
+    <h2 id="highRiskTitle">Latest high-risk merchants</h2>
+    <p>Most recently assessed merchants currently on Hold.</p>
+    <div id="highRiskState" class="state-message state-loading"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span>Loading merchants</div>
+    <div id="highRiskTableWrap" class="table-responsive d-none"><table class="table align-middle"><thead><tr><th>Merchant</th><th>Category</th><th>Risk score</th><th>Decision</th><th>Assessed</th></tr></thead><tbody id="highRiskBody"></tbody></table></div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<script>
+    const chartInstances = {};
+    let sharedNetwork = null;
+    let latestDashboardData = null;
+    const decisionOrder = ['Approve', 'Review', 'Hold'];
+    const chartPalette = colors => [colors.approve, colors.review, colors.hold];
+    const chartColors = () => {
+        const styles = getComputedStyle(document.documentElement);
+        return {
+            text: styles.getPropertyValue('--chart-text').trim(),
+            muted: styles.getPropertyValue('--chart-muted').trim(),
+            grid: styles.getPropertyValue('--chart-grid').trim(),
+            approve: styles.getPropertyValue('--chart-approve').trim(),
+            review: styles.getPropertyValue('--chart-review').trim(),
+            hold: styles.getPropertyValue('--chart-hold').trim(),
+            accent: styles.getPropertyValue('--chart-accent').trim(),
+            surface: styles.getPropertyValue('--chart-surface').trim()
+        };
+    };
+    const formatCount = value => new Intl.NumberFormat().format(Number(value || 0));
+    const formatPercent = value => `${(Number(value || 0) * 100).toFixed(1)}%`;
+    const stateIds = name => [`${name}State`, `${name}Visual`];
+
+    function showChartState(name, state, message = '') {
+        const [stateId, visualId] = stateIds(name);
+        const stateElement = document.getElementById(stateId);
+        const visualElement = document.getElementById(visualId);
+        visualElement.classList.toggle('d-none', state !== 'ready');
+        stateElement.classList.toggle('d-none', state === 'ready');
+        if (state === 'loading') {
+            stateElement.className = 'chart-state';
+            stateElement.innerHTML = '<span class="skeleton-line"></span><span class="skeleton-line"></span><span class="skeleton-line"></span>';
+        } else if (state !== 'ready') {
+            stateElement.className = `chart-state state-message ${state === 'error' ? 'state-error' : 'state-empty'}`;
+            stateElement.textContent = message;
+        }
+    }
+
+    function drawChart(name, canvasId, config, hasData) {
+        if (chartInstances[name]) chartInstances[name].destroy();
+        if (!hasData) {
+            showChartState(name, 'empty', 'No data matches these filters.');
+            return;
+        }
+        try {
+            const colors = chartColors();
+            const defaultPlugins = {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: colors.text, usePointStyle: true, pointStyle: 'circle', padding: 18 }
+                },
+                tooltip: { enabled: true, displayColors: true }
+            };
+            const customOptions = config.options || {};
+            const customPlugins = customOptions.plugins || {};
+            const chartPlugins = {
+                ...defaultPlugins,
+                ...customPlugins,
+                legend: { ...defaultPlugins.legend, ...customPlugins.legend,
+                    labels: { ...defaultPlugins.legend.labels, ...customPlugins.legend?.labels } },
+                tooltip: { ...defaultPlugins.tooltip, ...customPlugins.tooltip }
+            };
+            config.options = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: chartPlugins,
+                scales: config.type === 'doughnut' ? undefined : {
+                    x: { ticks: { color: colors.muted, padding: 6 }, grid: { color: colors.grid, drawBorder: false } },
+                    y: { beginAtZero: true, ticks: { color: colors.muted, padding: 6 }, grid: { color: colors.grid, drawBorder: false } }
+                },
+                ...customOptions,
+                plugins: chartPlugins
+            };
+            chartInstances[name] = new Chart(document.getElementById(canvasId), config);
+            showChartState(name, 'ready');
+        } catch (error) {
+            console.error(`Dashboard chart "${name}" could not be rendered.`, error);
+            showChartState(name, 'error', 'This chart could not be rendered.');
+        }
+    }
+
+    function updateKpiTrend(id, current, previous, isShare = false) {
+        const element = document.getElementById(`${id}Trend`);
+        if (previous === null || previous === undefined || Number(previous) === 0 && Number(current) === 0) {
+            element.className = 'kpi-trend flat';
+            element.textContent = 'No comparable change';
+            return;
+        }
+        const delta = Number(current) - Number(previous);
+        const percent = Number(previous) === 0 ? null : Math.abs(delta / Number(previous) * 100);
+        const direction = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+        const icon = delta > 0 ? 'bi-arrow-up-right' : delta < 0 ? 'bi-arrow-down-right' : 'bi-arrow-right';
+        const magnitude = percent === null ? 'New' : `${percent.toFixed(1)}%`;
+        element.className = `kpi-trend ${direction}`;
+        element.innerHTML = `<i class="bi ${icon}" aria-hidden="true"></i><span>${magnitude} vs prior period${isShare ? '' : ''}</span>`;
+    }
+
+    function renderKpis(data) {
+        const current = data.kpis || {};
+        const previous = data.previous_kpis || {};
+        const currentShare = current.total_merchants ? current.cold_start_count / current.total_merchants : 0;
+        const previousShare = previous.total_merchants ? previous.cold_start_count / previous.total_merchants : 0;
+        const rows = [
+            ['totalMerchants', current.total_merchants, previous.total_merchants, formatCount],
+            ['coldStartShare', currentShare, previousShare, formatPercent],
+            ['holdCount', current.hold_count, previous.hold_count, formatCount],
+            ['openAlerts', current.open_alerts, previous.open_alerts, formatCount],
+            ['averageRisk', current.average_risk_score, previous.average_risk_score, value => Number(value || 0).toFixed(2)]
+        ];
+        rows.forEach(([id, value, prior, formatter]) => {
+            document.getElementById(id).textContent = formatter(value);
+            updateKpiTrend(id, value || 0, prior ?? null, id === 'coldStartShare');
+        });
+    }
+
+    function renderDecisionMix(counts, colors) {
+        const total = counts.reduce((sum, count) => sum + count, 0);
+        if (!total) {
+            showChartState('decision', 'empty', 'No assessed merchants match these filters.');
+            return;
+        }
+        const visual = document.getElementById('decisionVisual');
+        visual.replaceChildren();
+        const totalLabel = document.createElement('div');
+        totalLabel.className = 'decision-total';
+        const totalValue = document.createElement('strong');
+        totalValue.textContent = formatCount(total);
+        totalLabel.append(totalValue, document.createTextNode('merchants assessed'));
+        visual.appendChild(totalLabel);
+
+        const track = document.createElement('div');
+        track.className = 'decision-track';
+        track.setAttribute('aria-hidden', 'true');
+        const breakdown = document.createElement('div');
+        breakdown.className = 'decision-breakdown';
+        decisionOrder.forEach((decision, index) => {
+            const count = counts[index];
+            const share = count / total * 100;
+            if (count) {
+                const segment = document.createElement('span');
+                segment.className = 'decision-track-segment';
+                segment.style.width = `${share}%`;
+                segment.style.backgroundColor = colors[index];
+                segment.title = `${decision}: ${formatCount(count)} (${share.toFixed(1)}%)`;
+                track.appendChild(segment);
+            }
+            const item = document.createElement('div');
+            item.className = 'decision-item';
+            item.style.setProperty('--decision-color', colors[index]);
+            const label = document.createElement('div');
+            label.className = 'decision-item-label';
+            label.textContent = decision;
+            const value = document.createElement('div');
+            value.className = 'decision-item-value';
+            value.textContent = formatCount(count);
+            const percent = document.createElement('div');
+            percent.className = 'decision-item-share';
+            percent.textContent = `${share.toFixed(1)}% of cohort`;
+            item.append(label, value, percent);
+            breakdown.appendChild(item);
+        });
+        visual.append(track, breakdown);
+        showChartState('decision', 'ready');
+    }
+
+    function renderAlertHeatmap(rows, colors) {
+        if (!rows.length) {
+            showChartState('alerts', 'empty', 'No alerts match these filters.');
+            return;
+        }
+        const statusColors = {
+            OPEN: colors.hold,
+            IN_PROGRESS: colors.review,
+            'IN PROGRESS': colors.review,
+            CLOSED: colors.approve,
+            RESOLVED: colors.approve
+        };
+        const statusRank = { OPEN: 0, 'IN PROGRESS': 1, CLOSED: 2, RESOLVED: 3 };
+        const severityRank = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+        const statuses = [...new Set(rows.map(row => String(row.status).toUpperCase()))]
+            .sort((a, b) => (statusRank[a] ?? 4) - (statusRank[b] ?? 4) || a.localeCompare(b));
+        const severities = [...new Set(rows.map(row => String(row.severity).toUpperCase()))]
+            .sort((a, b) => (severityRank[a] ?? 4) - (severityRank[b] ?? 4) || a.localeCompare(b));
+        const counts = new Map(rows.map(row => [`${String(row.severity).toUpperCase()}|${String(row.status).toUpperCase()}`, Number(row.count)]));
+        const maximum = Math.max(1, ...counts.values());
+        const visual = document.getElementById('alertsVisual');
+        visual.replaceChildren();
+        const grid = document.createElement('div');
+        grid.className = 'heatmap';
+        grid.style.setProperty('--heatmap-columns', statuses.length);
+
+        const header = document.createElement('div');
+        header.className = 'heatmap-row';
+        const blank = document.createElement('span');
+        header.appendChild(blank);
+        statuses.forEach(status => {
+            const heading = document.createElement('span');
+            heading.className = 'heatmap-heading';
+            heading.textContent = status.replaceAll('_', ' ');
+            header.appendChild(heading);
+        });
+        grid.appendChild(header);
+
+        severities.forEach(severity => {
+            const row = document.createElement('div');
+            row.className = 'heatmap-row';
+            const label = document.createElement('span');
+            label.className = 'heatmap-severity';
+            label.textContent = severity;
+            row.appendChild(label);
+            statuses.forEach(status => {
+                const count = counts.get(`${severity}|${status}`) || 0;
+                const cell = document.createElement('span');
+                cell.className = 'heatmap-cell';
+                cell.textContent = count ? formatCount(count) : '—';
+                cell.setAttribute('aria-label', `${severity} ${status}: ${formatCount(count)} alerts`);
+                if (count) {
+                    const color = statusColors[status] || colors.accent;
+                    const alpha = 0.1 + count / maximum * 0.72;
+                    const channels = color.match(/\w\w/g).slice(0, 3).map(channel => parseInt(channel, 16));
+                    cell.style.backgroundColor = `rgba(${channels.join(',')},${alpha})`;
+                }
+                row.appendChild(cell);
+            });
+            grid.appendChild(row);
+        });
+
+        const legend = document.createElement('div');
+        legend.className = 'heatmap-legend';
+        statuses.forEach(status => {
+            const item = document.createElement('span');
+            const swatch = document.createElement('i');
+            swatch.style.backgroundColor = statusColors[status] || colors.accent;
+            item.append(swatch, document.createTextNode(status.replaceAll('_', ' ')));
+            legend.appendChild(item);
+        });
+        visual.append(grid, legend);
+        showChartState('alerts', 'ready');
+    }
+
+    function renderSharedNetwork(rows, colors) {
+        if (sharedNetwork) {
+            sharedNetwork.destroy();
+            sharedNetwork = null;
+        }
+        const meta = document.getElementById('sharedNetworkMeta');
+        const legend = document.getElementById('sharedNetworkLegend');
+        if (!rows.length) {
+            meta.classList.add('d-none');
+            legend.classList.add('d-none');
+            showChartState('shared', 'empty', 'No entity links were recorded for merchants in this cohort. Try a wider date range or another category.');
+            return;
+        }
+        if (!window.vis || !window.vis.Network || !window.vis.DataSet) {
+            console.error('The network visualization library did not load.');
+            showChartState('shared', 'error', 'The relationship graph could not be loaded. Refresh the page to retry.');
+            return;
+        }
+
+        const entityStyles = {
+            bank_account: { label: 'Bank account', color: '#d19524', shape: 'diamond' },
+            device: { label: 'Device', color: '#397c91', shape: 'triangle' },
+            ip_address: { label: 'IP address', color: '#6f7a9a', shape: 'square' }
+        };
+        const nodes = new window.vis.DataSet();
+        const edges = new window.vis.DataSet();
+        const merchantIds = new Set();
+        let edgeCount = 0;
+
+        rows.forEach((row, index) => {
+            const style = entityStyles[row.entity_type] || { label: row.entity_type, color: colors.accent, shape: 'dot' };
+            const entityNodeId = `entity:${row.entity_type}:${row.entity_id}`;
+            const sharedCount = Number(row.shared_size || 0);
+            nodes.add({
+                id: entityNodeId,
+                label: `${style.label}\n${row.entity_id}`,
+                title: `${style.label}: ${row.entity_id}\nLinked merchants: ${formatCount(sharedCount)}`,
+                shape: style.shape,
+                size: Math.min(34, 18 + Math.sqrt(sharedCount) * 2.4),
+                color: { background: style.color, border: style.color, highlight: { background: style.color, border: colors.text } },
+                font: { color: colors.text, face: 'DM Sans', size: 12, strokeWidth: 3, strokeColor: colors.surface },
+                borderWidth: 2,
+                entityType: row.entity_type
+            });
+            String(row.merchant_ids || '').split(',').filter(Boolean).forEach(merchantId => {
+                const merchantNodeId = `merchant:${merchantId}`;
+                if (!merchantIds.has(merchantId)) {
+                    merchantIds.add(merchantId);
+                    nodes.add({
+                        id: merchantNodeId,
+                        label: merchantId,
+                        title: `Merchant: ${merchantId}`,
+                        shape: 'dot',
+                        size: 22,
+                        color: { background: '#176b5b', border: '#105448', highlight: { background: '#18836f', border: colors.text } },
+                        font: { color: colors.text, face: 'DM Sans', size: 12, strokeWidth: 3, strokeColor: colors.surface },
+                        borderWidth: 2,
+                        entityType: 'merchant'
+                    });
+                }
+                edges.add({ id: `link:${index}:${merchantId}`, from: merchantNodeId, to: entityNodeId, color: { color: '#aab9b6', highlight: colors.accent }, width: 1.5 });
+                edgeCount += 1;
+            });
+        });
+        if (!edgeCount) {
+            meta.classList.add('d-none');
+            legend.classList.add('d-none');
+            showChartState('shared', 'empty', 'No entity links were recorded for merchants in this cohort. Try a wider date range or another category.');
+            return;
+        }
+
+        sharedNetwork = new window.vis.Network(
+            document.getElementById('sharedGraph'),
+            { nodes, edges },
+            {
+                autoResize: true,
+                interaction: { hover: true, navigationButtons: true, keyboard: true, tooltipDelay: 150 },
+                nodes: { font: { face: 'DM Sans', color: colors.text }, borderWidth: 1 },
+                edges: { smooth: { type: 'dynamic', roundness: 0.25 }, selectionWidth: 2 },
+                physics: { stabilization: { iterations: 160 }, barnesHut: { gravitationalConstant: -4200, springLength: 145, springConstant: 0.04 } }
+            }
+        );
+        document.getElementById('sharedNetworkCount').textContent = `${formatCount(merchantIds.size)} merchants · ${formatCount(edgeCount)} entity links`;
+        meta.classList.remove('d-none');
+        legend.classList.remove('d-none');
+        document.getElementById('sharedFit').onclick = () => sharedNetwork?.fit({ animation: { duration: 450, easingFunction: 'easeInOutQuad' } });
+        showChartState('shared', 'ready');
+    }
+
+    function renderCharts(data) {
+        const colors = chartColors();
+        const decisions = new Map((data.decisions || []).map(row => [row.decision, Number(row.count)]));
+        const decisionCounts = decisionOrder.map(decision => decisions.get(decision) || 0);
+        renderDecisionMix(decisionCounts, chartPalette(colors));
+
+        const dailyRows = data.daily_registrations || [];
+        const days = [...new Set(dailyRows.map(row => row.day))];
+        const decisionColors = chartPalette(colors);
+        drawChart('daily', 'dailyChart', {
+            type: 'line',
+            data: { labels: days, datasets: decisionOrder.map((decision, index) => ({
+                label: decision,
+                data: days.map(day => Number(dailyRows.find(row => row.day === day && row.decision === decision)?.count || 0)),
+                borderColor: decisionColors[index],
+                backgroundColor: `${decisionColors[index]}24`,
+                pointBackgroundColor: decisionColors[index],
+                pointBorderColor: colors.surface,
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                borderWidth: 2.5,
+                tension: 0.35,
+                fill: true
+            })) },
+            options: {
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: colors.muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+                    y: { beginAtZero: true, ticks: { color: colors.muted, precision: 0, stepSize: 1 }, grid: { color: colors.grid, drawBorder: false } }
+                }
+            }
+        }, days.length > 0);
+
+        const categoryRows = data.categories || [];
+        drawChart('category', 'categoryChart', {
+            type: 'bubble',
+            data: { datasets: [{
+                label: 'Business category',
+                data: categoryRows.map(row => ({
+                    x: Number(row.average_risk_score),
+                    y: Number(row.hold_rate),
+                    r: Math.min(28, 8 + Math.sqrt(Number(row.merchant_count || 0)) * 2),
+                    category: row.category,
+                    merchantCount: Number(row.merchant_count || 0)
+                })),
+                backgroundColor: categoryRows.map(row => Number(row.hold_rate) >= 0.5 ? `${colors.hold}b8` : `${colors.accent}b8`),
+                borderColor: categoryRows.map(row => Number(row.hold_rate) >= 0.5 ? colors.hold : colors.accent),
+                borderWidth: 2,
+                hoverBorderWidth: 3
+            }] },
+            options: {
+                scales: {
+                    x: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'Average risk score', color: colors.muted }, ticks: { color: colors.muted, callback: value => `${Math.round(value * 100)}%` }, grid: { color: colors.grid, drawBorder: false } },
+                    y: { min: 0, max: 1, title: { display: true, text: 'Hold rate', color: colors.muted }, ticks: { color: colors.muted, callback: value => `${Math.round(value * 100)}%` }, grid: { color: colors.grid, drawBorder: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: context => {
+                        const point = context.raw;
+                        return [
+                            ` ${point.category}`,
+                            ` Average risk: ${(point.x * 100).toFixed(1)}%`,
+                            ` Hold rate: ${(point.y * 100).toFixed(1)}%`,
+                            ` Merchants: ${formatCount(point.merchantCount)}`
+                        ];
+                    } } }
+                }
+            }
+        }, categoryRows.length > 0);
+
+        const histogramRows = data.risk_histogram || [];
+        const histogram = Array.from({ length: 10 }, (_, index) => Number(histogramRows.find(row => Number(row.bucket) === index)?.count || 0));
+        drawChart('histogram', 'histogramChart', {
+            type: 'line',
+            data: { labels: histogram.map((_, index) => `${index * 10}–${(index + 1) * 10}%`), datasets: [{
+                label: 'Assessments',
+                data: histogram,
+                borderColor: colors.accent,
+                backgroundColor: `${colors.accent}32`,
+                pointBackgroundColor: colors.accent,
+                pointBorderColor: colors.surface,
+                pointBorderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                borderWidth: 3,
+                tension: 0.38,
+                fill: true
+            }] },
+            options: {
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: colors.muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
+                    y: { beginAtZero: true, ticks: { color: colors.muted, precision: 0, stepSize: 1 }, grid: { color: colors.grid, drawBorder: false } }
+                }
+            }
+        }, histogram.some(Boolean));
+
+        renderAlertHeatmap(data.alerts || [], colors);
+
+        const entityRows = [...(data.shared_entities || [])]
+            .sort((a, b) => Number(b.shared_size) - Number(a.shared_size))
+            .slice(0, 30);
+        renderSharedNetwork(entityRows, colors);
+    }
+
+    function renderHighRisk(rows) {
+        const state = document.getElementById('highRiskState');
+        const table = document.getElementById('highRiskTableWrap');
+        const tbody = document.getElementById('highRiskBody');
+        tbody.replaceChildren();
+        if (!rows.length) {
+            state.className = 'state-message state-empty';
+            state.textContent = 'No high-risk merchants match these filters.';
+            table.classList.add('d-none');
+            return;
+        }
+        rows.forEach(merchant => {
+            const row = document.createElement('tr');
+            const linkCell = document.createElement('td');
+            const link = document.createElement('a');
+            link.className = 'merchant-link';
+            link.href = `/risk/${encodeURIComponent(merchant.merchant_id)}`;
+            link.textContent = merchant.merchant_id;
+            linkCell.appendChild(link);
+            row.appendChild(linkCell);
+            [merchant.category, Number(merchant.risk_score).toFixed(2), merchant.decision, merchant.evaluated_at].forEach(value => {
+                const cell = document.createElement('td');
+                cell.textContent = value ?? '';
+                row.appendChild(cell);
+            });
+            tbody.appendChild(row);
+        });
+        state.classList.add('d-none');
+        table.classList.remove('d-none');
+    }
+
+    async function loadDashboard(event) {
+        if (event) event.preventDefault();
+        ['decision', 'daily', 'category', 'histogram', 'alerts', 'shared'].forEach(name => showChartState(name, 'loading'));
+        const dashboardError = document.getElementById('dashboardError');
+        dashboardError.classList.add('d-none');
+        const query = new URLSearchParams(new FormData(document.getElementById('dashboardFilters')));
+        try {
+            const response = await fetch(`/api/dashboard/summary?${query}`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+            latestDashboardData = data;
+            renderKpis(data);
+            renderCharts(data);
+            renderHighRisk(data.latest_high_risk || []);
+            const categorySelect = document.getElementById('categoryFilter');
+            const selectedCategory = query.get('category');
+            const options = (data.category_options || []).map(item => item.category).filter(Boolean);
+            categorySelect.replaceChildren(new Option('All categories', ''));
+            options.forEach(category => categorySelect.add(new Option(category, category)));
+            categorySelect.value = selectedCategory;
+        } catch (error) {
+            dashboardError.querySelector('span').textContent = error.message || 'Dashboard data could not be loaded.';
+            dashboardError.classList.remove('d-none');
+            ['decision', 'daily', 'category', 'histogram', 'alerts', 'shared'].forEach(name => showChartState(name, 'error', 'Dashboard data could not be loaded.'));
+            const state = document.getElementById('highRiskState');
+            state.className = 'state-message state-error';
+            state.textContent = 'High-risk merchants could not be loaded.';
+            document.getElementById('highRiskTableWrap').classList.add('d-none');
+        }
+    }
+
+    const today = new Date();
+    const start = new Date(today);
+    start.setDate(start.getDate() - 29);
+    const asDateInput = value => new Date(value.getTime() - value.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    document.getElementById('dateFrom').value = asDateInput(start);
+    document.getElementById('dateTo').value = asDateInput(today);
+    document.getElementById('dashboardFilters').addEventListener('submit', loadDashboard);
+    window.addEventListener('fg-theme-change', function() {
+        if (latestDashboardData) renderCharts(latestDashboardData);
+    });
+    loadDashboard();
+</script>
+{% endblock %}

@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+{% set page_key = "onboarding" %}
+{% block title %}Merchant Onboarding - FraudGuard{% endblock %}
+{% block page_title %}Merchant Onboarding{% endblock %}
+{% block page_subtitle %}Register and assess a new merchant{% endblock %}
+{% block content %}
+<div class="page-heading d-flex flex-wrap justify-content-between align-items-start gap-2">
+    <div>
+        <h1>New merchant</h1>
+        <p>Submit onboarding details for an immediate risk assessment.</p>
+    </div>
+    <span class="demo-badge"><i class="bi bi-flask" aria-hidden="true"></i>Demo mode — synthetic data only</span>
+</div>
+
+<section class="card mb-4">
+    <div class="card-header"><span>Registration details</span><span class="text-secondary small">Fields marked optional may be left blank</span></div>
+    <div class="card-body">
+        <form id="onboardingForm" class="row g-3" novalidate>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="business_category">Business category</label>
+                <select class="form-select" id="business_category" name="business_category" required>
+                    <option value="">Choose a category</option>
+                    <option value="Electronics">Electronics</option>
+                    <option value="Digital Services">Digital Services</option>
+                    <option value="Fashion">Fashion</option>
+                    <option value="Grocery">Grocery</option>
+                    <option value="Travel">Travel</option>
+                </select>
+                <div class="invalid-feedback">Choose the merchant's business category.</div>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="bank_account_id">Bank account ID <span class="text-secondary fw-normal">(format: BA_000123)</span></label>
+                <div class="input-group">
+                    <input class="form-control" id="bank_account_id" name="bank_account_id" placeholder="e.g. BA_000123" autocomplete="off" required>
+                    <button class="btn btn-outline-secondary" type="button" id="btnGenBank" title="Generate a test bank ID"><i class="bi bi-dice-5 me-1" aria-hidden="true"></i>Generate</button>
+                </div>
+                <div class="form-text">Demo: use a test ID like BA_000123. Do not enter real bank details.</div>
+                <div class="invalid-feedback">Enter a bank account ID.</div>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="device_id">Device ID</label>
+                <div class="input-group">
+                    <input class="form-control" id="device_id" name="device_id" autocomplete="off" required>
+                    <button class="btn btn-outline-secondary" type="button" id="btnGenDevice" title="Generate a test device ID"><i class="bi bi-dice-5 me-1" aria-hidden="true"></i>Generate</button>
+                </div>
+                <div class="invalid-feedback">Enter a device ID.</div>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="ip_address">IP address <span class="text-secondary fw-normal">(optional)</span></label>
+                <div class="input-group">
+                    <input class="form-control" id="ip_address" name="ip_address" inputmode="decimal" placeholder="203.0.113.45" autocomplete="off">
+                    <button class="btn btn-outline-secondary" type="button" id="btnMyIp" title="Use my current IP address"><i class="bi bi-geo-alt me-1" aria-hidden="true"></i>My IP</button>
+                </div>
+                <div class="form-text">Leave blank to auto-detect, or use 192.0.2.x / 198.51.100.x / 203.0.113.x for demo.</div>
+                <div class="invalid-feedback" id="ipAddressFeedback">Use the format 192.168.1.10 or leave blank.</div>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="transaction_count">Transaction count</label>
+                <input class="form-control" id="transaction_count" name="transaction_count" type="number" min="0" step="1" value="0" required>
+                <div class="invalid-feedback">Enter a transaction count of zero or more.</div>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label" for="business_age_days">Business age in days <span class="text-secondary fw-normal">(optional)</span></label>
+                <input class="form-control" id="business_age_days" name="business_age_days" type="number" min="0" step="1" placeholder="Leave blank if unknown">
+                <div class="invalid-feedback">Enter a business age of zero or more, or leave it blank.</div>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="phone_verified">Phone verified <span class="text-secondary fw-normal">(optional)</span></label>
+                <select class="form-select" id="phone_verified" name="phone_verified"><option value="">Not provided</option><option value="1">Verified</option><option value="0">Not verified</option></select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="email_verified">Email verified <span class="text-secondary fw-normal">(optional)</span></label>
+                <select class="form-select" id="email_verified" name="email_verified"><option value="">Not provided</option><option value="1">Verified</option><option value="0">Not verified</option></select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="document_verified">Documents verified <span class="text-secondary fw-normal">(optional)</span></label>
+                <select class="form-select" id="document_verified" name="document_verified"><option value="">Not provided</option><option value="1">Verified</option><option value="0">Not verified</option></select>
+            </div>
+            <div class="col-12 d-flex flex-wrap align-items-center gap-2 pt-2">
+                <button class="btn btn-primary" type="submit" id="submitOnboarding"><i class="bi bi-shield-check me-1" aria-hidden="true"></i>Register and assess</button>
+                <button class="btn btn-outline-success btn-sm" type="button" id="btnFillGenuine"><i class="bi bi-magic me-1"></i>Fill Sample Clean</button>
+                <button class="btn btn-outline-danger btn-sm" type="button" id="btnFillSuspicious"><i class="bi bi-diagram-3 me-1"></i>Fill Fraud Ring</button>
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('home') }}">Cancel</a>
+                <span id="formStatus" class="small text-secondary" role="status" aria-live="polite"></span>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card" aria-live="polite">
+    <div class="card-header"><span>Risk assessment result</span><span id="decisionBadge" class="risk-badge risk-approve d-none"></span></div>
+    <div class="card-body">
+        <div id="resultEmpty" class="state-message state-empty"><i class="bi bi-clipboard2-check" aria-hidden="true"></i>Assessment will appear here after submission.</div>
+        <div id="resultLoading" class="state-message state-loading d-none"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span>Registering and assessing merchant…</div>
+        <div id="resultError" class="state-message state-error d-none" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span></span></div>
+        <div id="resultContent" class="d-none">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <strong id="riskScoreLabel"></strong>
+                <span id="dataCompleteness" class="text-secondary small"></span>
+            </div>
+            <div class="progress risk-track mb-3" role="progressbar" aria-label="Fraud risk score" aria-valuemin="0" aria-valuemax="100">
+                <div id="riskScoreBar" class="risk-bar risk-approve" style="width:0%"></div>
+            </div>
+            <h2 class="h6 fw-bold mt-4">Reasons</h2>
+            <ol id="assessmentReasons" class="mb-3"></ol>
+            <div class="d-flex flex-wrap gap-2">
+                <a id="fullAssessmentLink" class="btn btn-outline-secondary btn-sm" href="#">View full assessment <i class="bi bi-arrow-up-right ms-1" aria-hidden="true"></i></a>
+                <a id="networkLink" class="btn btn-outline-primary btn-sm" href="#"><i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>View full network</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const onboardingForm = document.getElementById('onboardingForm');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const optionalIntegerFields = ['business_age_days', 'phone_verified', 'email_verified', 'document_verified'];
+
+    function setResultState(state) {
+        ['resultEmpty', 'resultLoading', 'resultError', 'resultContent'].forEach((id) => {
+            document.getElementById(id).classList.toggle('d-none', id !== state);
+        });
+    }
+
+    function decisionClass(decision) {
+        if (decision === 'Hold') return 'risk-hold';
+        if (decision === 'Review') return 'risk-review';
+        return 'risk-approve';
+    }
+
+    function optionalInteger(id) {
+        const value = document.getElementById(id).value.trim();
+        return value === '' ? null : Number.parseInt(value, 10);
+    }
+
+    function isValidIpAddress(value) {
+        if (!value) return true; // optional — blank is OK
+        const ipv4Parts = value.split('.');
+        if (ipv4Parts.length === 4 && ipv4Parts.every((part) => /^\d{1,3}$/.test(part) && Number(part) <= 255)) return true;
+        if (!value.includes(':') || !/^[0-9a-fA-F:.]+$/.test(value)) return false;
+        try { new URL(`http://[${value}]/`); return true; } catch (_) { return false; }
+    }
+
+    function validateForm() {
+        const category = document.getElementById('business_category');
+        category.setCustomValidity(category.value.trim() ? '' : 'Choose a business category.');
+        const bank = document.getElementById('bank_account_id');
+        bank.setCustomValidity(bank.value.trim() ? '' : 'Enter a bank account ID.');
+        const device = document.getElementById('device_id');
+        device.setCustomValidity(device.value.trim() ? '' : 'Enter a device ID.');
+        const ipField = document.getElementById('ip_address');
+        ipField.setCustomValidity(isValidIpAddress(ipField.value.trim()) ? '' : 'Use the format 192.168.1.10 or leave blank.');
+        const tc = document.getElementById('transaction_count');
+        tc.setCustomValidity(Number.isInteger(Number(tc.value)) && Number(tc.value) >= 0 ? '' : 'Enter a transaction count of zero or more.');
+        const ba = document.getElementById('business_age_days');
+        ba.setCustomValidity(!ba.value || (Number.isInteger(Number(ba.value)) && Number(ba.value) >= 0) ? '' : 'Enter a business age of zero or more, or leave it blank.');
+        onboardingForm.classList.add('was-validated');
+        if (!onboardingForm.checkValidity()) {
+            document.getElementById('formStatus').textContent = 'Check the highlighted fields and try again.';
+            return false;
+        }
+        document.getElementById('formStatus').textContent = '';
+        return true;
+    }
+
+    function showAssessment(assessment) {
+        const className = decisionClass(assessment.decision);
+        const badge = document.getElementById('decisionBadge');
+        badge.className = `risk-badge ${className}`;
+        badge.textContent = assessment.decision;
+        badge.classList.remove('d-none');
+        document.getElementById('riskScoreLabel').textContent = `Risk score: ${(assessment.risk_score * 100).toFixed(1)}%`;
+        document.getElementById('dataCompleteness').textContent = assessment.data_completeness ? `Data completeness: ${assessment.data_completeness}` : '';
+        const bar = document.getElementById('riskScoreBar');
+        bar.className = `risk-bar ${className}`;
+        bar.style.width = `${Math.max(0, Math.min(100, assessment.risk_score * 100))}%`;
+        bar.parentElement.setAttribute('aria-valuenow', `${Math.round(assessment.risk_score * 100)}`);
+        const reasons = document.getElementById('assessmentReasons');
+        reasons.replaceChildren();
+        (assessment.reasons || []).slice(0, 5).forEach((reason) => {
+            const item = document.createElement('li');
+            item.textContent = reason;
+            reasons.appendChild(item);
+        });
+        const mid = assessment.merchant_id;
+        document.getElementById('fullAssessmentLink').href = `/risk/${encodeURIComponent(mid)}`;
+        document.getElementById('networkLink').href = `/network/${encodeURIComponent(mid)}`;
+        setResultState('resultContent');
+        if (window.fgToast) {
+            const msgs = {Hold:'High-risk merchant flagged for review.', Review:'Merchant flagged for manual review.', Approve:'Merchant approved successfully.'};
+            const types = {Hold:'error', Review:'warning', Approve:'success'};
+            window.fgToast(msgs[assessment.decision] || 'Assessment complete.', types[assessment.decision] || 'info');
+        }
+    }
+
+    onboardingForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (!validateForm()) return;
+        document.getElementById('decisionBadge').classList.add('d-none');
+        setResultState('resultLoading');
+        document.getElementById('submitOnboarding').disabled = true;
+        const ipRaw = document.getElementById('ip_address').value.trim();
+        const payload = {
+            merchant_id: 'M_NEW_' + Math.floor(10000 + Math.random() * 90000),
+            business_category: document.getElementById('business_category').value,
+            bank_account_id: document.getElementById('bank_account_id').value.trim(),
+            device_id: document.getElementById('device_id').value.trim(),
+            transaction_count: Number.parseInt(document.getElementById('transaction_count').value, 10)
+        };
+        if (ipRaw) payload.ip_address = ipRaw;
+        optionalIntegerFields.forEach((field) => { payload[field] = optionalInteger(field); });
+        try {
+            const response = await fetch('/api/merchant/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || result.error || `Registration failed (${response.status})`);
+            showAssessment(result);
+        } catch (error) {
+            document.querySelector('#resultError span').textContent = error.message || 'Registration failed. Please try again.';
+            setResultState('resultError');
+        } finally {
+            document.getElementById('submitOnboarding').disabled = false;
+        }
+    });
+
+    /* Generate & helper buttons */
+    document.getElementById('btnGenBank')?.addEventListener('click', () => {
+        const rnd = Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('bank_account_id').value = `BA_${rnd}`;
+    });
+    document.getElementById('btnGenDevice')?.addEventListener('click', () => {
+        const hex = Array.from({length: 8}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+        document.getElementById('device_id').value = `DEV_${hex}`;
+    });
+    document.getElementById('btnMyIp')?.addEventListener('click', async () => {
+        const btn = document.getElementById('btnMyIp');
+        btn.disabled = true;
+        try {
+            const r = await fetch('/api/my-ip');
+            if (r.ok) { const d = await r.json(); document.getElementById('ip_address').value = d.ip || ''; }
+        } catch(_) { document.getElementById('ip_address').value = '192.0.2.1'; }
+        finally { btn.disabled = false; }
+    });
+
+    document.getElementById('btnFillGenuine')?.addEventListener('click', () => {
+        document.getElementById('business_category').value = 'Electronics';
+        document.getElementById('bank_account_id').value = 'BA_' + Math.floor(100000 + Math.random() * 900000);
+        document.getElementById('device_id').value = 'DEV_' + Array.from({length:8}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+        document.getElementById('ip_address').value = '198.51.100.' + Math.floor(10 + Math.random() * 200);
+        document.getElementById('transaction_count').value = 0;
+        document.getElementById('business_age_days').value = 365;
+        document.getElementById('phone_verified').value = '1';
+        document.getElementById('email_verified').value = '1';
+        document.getElementById('document_verified').value = '1';
+        document.getElementById('formStatus').textContent = 'Sample clean merchant details loaded.';
+    });
+
+    document.getElementById('btnFillSuspicious')?.addEventListener('click', () => {
+        document.getElementById('business_category').value = 'Travel';
+        document.getElementById('bank_account_id').value = 'BA_000028';
+        document.getElementById('device_id').value = 'DEV_000003';
+        document.getElementById('ip_address').value = '192.0.2.13';
+        document.getElementById('transaction_count').value = 0;
+        document.getElementById('business_age_days').value = 5;
+        document.getElementById('phone_verified').value = '0';
+        document.getElementById('email_verified').value = '0';
+        document.getElementById('document_verified').value = '0';
+        document.getElementById('formStatus').textContent = 'Sample fraud ring merchant details loaded.';
+    });
+</script>
+{% endblock %}

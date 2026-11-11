@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% set page_key = "upload" %}
+{% block title %}Batch Ingestion & Scoring - FraudGuard{% endblock %}
+{% block page_title %}Batch Ingestion & Scoring{% endblock %}
+{% block page_subtitle %}Upload new merchant CSV files for real-time cold-start graph evaluation{% endblock %}
+
+{% block head %}
+<style>
+    .dropzone-box {
+        border: 2px dashed #397c91;
+        border-radius: var(--card-radius);
+        background: #f8fafb;
+        padding: 3rem 1.5rem;
+        text-align: center;
+        transition: border-color 0.2s, background-color 0.2s;
+        cursor: pointer;
+    }
+    .dropzone-box:hover, .dropzone-box.dragover {
+        border-color: var(--accent);
+        background-color: #f0f7f5;
+    }
+    .dropzone-icon {
+        font-size: 3rem;
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+    }
+    .upload-progress {
+        display: none;
+    }
+    .results-container {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+    <div>
+        <h1>Batch Merchant Ingestion</h1>
+        <p>Score entire merchant cohorts with graph priors and export evaluation summaries.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="/api/sample-csv" download="merchant_upload_template.csv">
+            <i class="bi bi-file-earmark-arrow-down me-1" aria-hidden="true"></i>Download CSV Template
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <span>Upload Merchant CSV</span>
+                <i class="bi bi-cloud-arrow-up text-secondary" aria-hidden="true"></i>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="dropzone-box" id="dropzoneBox">
+                        <i class="bi bi-cloud-arrow-up-fill dropzone-icon" aria-hidden="true"></i>
+                        <h6 class="fw-bold mb-1">Click to select or drag & drop CSV file</h6>
+                        <p class="text-muted small mb-3">Accepts standard .csv containing merchant onboarding fields</p>
+                        <input type="file" id="merchantsFile" name="merchants_csv" accept=".csv" class="d-none" required>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnBrowse">Browse Files</button>
+                    </div>
+
+                    <div id="fileSelectedInfo" class="mt-3 p-2 border rounded d-none align-items-center justify-content-between bg-light">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-spreadsheet text-success fs-5"></i>
+                            <div>
+                                <div class="fw-bold small" id="fileName">merchants.csv</div>
+                                <div class="text-muted" style="font-size: 0.75rem;" id="fileSize">0 KB</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-sm" id="btnRemoveFile" aria-label="Remove file"></button>
+                    </div>
+
+                    <div id="uploadAlert" class="alert alert-danger d-none mt-3" role="alert"></div>
+
+                    <div class="upload-progress mt-3" id="uploadProgress">
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Ingesting and scoring merchants...</span>
+                            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary w-100"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary w-100" id="btnUploadSubmit" disabled>
+                            <i class="bi bi-lightning-charge me-1" aria-hidden="true"></i>Process & Score Batch
+                        </button>
+                    </div>
+                </form>
+
+                <div class="mt-4 pt-3 border-top">
+                    <h6 class="small fw-bold text-muted text-uppercase mb-2">Required Columns</h6>
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        <span class="badge bg-light text-dark border">merchant_id</span>
+                        <span class="badge bg-light text-dark border">business_category</span>
+                        <span class="badge bg-light text-dark border">registration_date</span>
+                        <span class="badge bg-light text-dark border">bank_account_id</span>
+                        <span class="badge bg-light text-dark border">device_id</span>
+                        <span class="badge bg-light text-dark border">ip_address</span>
+                    </div>
+                    <h6 class="small fw-bold text-muted text-uppercase mb-2">Optional Columns</h6>
+                    <div class="d-flex flex-wrap gap-1">
+                        <span class="badge bg-light text-secondary border">business_age_days</span>
+                        <span class="badge bg-light text-secondary border">phone_verified</span>
+                        <span class="badge bg-light text-secondary border">email_verified</span>
+                        <span class="badge bg-light text-secondary border">document_verified</span>
+                        <span class="badge bg-light text-secondary border">transaction_count</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-xl-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Batch Scoring Results</span>
+                <span class="badge bg-secondary" id="badgeStatus">Awaiting File</span>
+            </div>
+            <div class="card-body">
+                <div id="resultsEmpty" class="text-center py-5 text-muted">
+                    <i class="bi bi-bar-chart-steps fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                    <h6>No batch results yet</h6>
+                    <p class="small mb-0">Upload a merchant CSV file to run the risk engine across all records.</p>
+                </div>
+
+                <div class="results-container" id="resultsContainer">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-4">
+                            <div class="p-3 bg-light rounded border text-center">
+                                <div class="fs-4 fw-bold text-dark" id="statProcessed">0</div>
+                                <div class="text-muted small">Merchants Processed</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-4">
+                            <div class="p-3 bg-light rounded border text-center">
+                                <div class="fs-4 fw-bold text-primary" id="statCompleteness">0%</div>
+                                <div class="text-muted small">Data Completeness</div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <div class="p-3 bg-light rounded border text-center">
+                                <div class="fs-4 fw-bold text-danger" id="statHold">0</div>
+                                <div class="text-muted small">High Risk / Hold</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-2">Sample Evaluated Merchants</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle table-hover border">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Merchant</th>
+                                    <th>Category</th>
+                                    <th>Risk Score</th>
+                                    <th>Decision</th>
+                                    <th>Primary Reason</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="small text-muted mt-2">
+                        <i class="bi bi-info-circle me-1"></i>All scored records have been updated in Power BI exports.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dropzoneBox = document.getElementById('dropzoneBox');
+    const merchantsFile = document.getElementById('merchantsFile');
+    const btnBrowse = document.getElementById('btnBrowse');
+    const fileSelectedInfo = document.getElementById('fileSelectedInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const btnRemoveFile = document.getElementById('btnRemoveFile');
+    const btnUploadSubmit = document.getElementById('btnUploadSubmit');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadAlert = document.getElementById('uploadAlert');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const resultsEmpty = document.getElementById('resultsEmpty');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const badgeStatus = document.getElementById('badgeStatus');
+
+    btnBrowse.addEventListener('click', () => merchantsFile.click());
+    dropzoneBox.addEventListener('click', (e) => {
+        if (e.target !== btnBrowse) merchantsFile.click();
+    });
+
+    ['dragenter', 'dragover'].forEach(name => {
+        dropzoneBox.addEventListener(name, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzoneBox.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(name => {
+        dropzoneBox.addEventListener(name, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropzoneBox.classList.remove('dragover');
+        });
+    });
+
+    dropzoneBox.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt.files && dt.files.length > 0) {
+            merchantsFile.files = dt.files;
+            handleFileSelect();
+        }
+    });
+
+    merchantsFile.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+        if (merchantsFile.files.length > 0) {
+            const file = merchantsFile.files[0];
+            if (!file.name.endsWith('.csv')) {
+                showError("Please select a valid CSV (.csv) file.");
+                clearFile();
+                return;
+            }
+            hideError();
+            fileName.textContent = file.name;
+            fileSize.textContent = `${(file.size / 1024).toFixed(1)} KB`;
+            fileSelectedInfo.classList.remove('d-none');
+            fileSelectedInfo.classList.add('d-flex');
+            btnUploadSubmit.disabled = false;
+        }
+    }
+
+    btnRemoveFile.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearFile();
+    });
+
+    function clearFile() {
+        merchantsFile.value = '';
+        fileSelectedInfo.classList.add('d-none');
+        fileSelectedInfo.classList.remove('d-flex');
+        btnUploadSubmit.disabled = true;
+    }
+
+    function showError(msg) {
+        uploadAlert.textContent = msg;
+        uploadAlert.classList.remove('d-none');
+    }
+
+    function hideError() {
+        uploadAlert.classList.add('d-none');
+        uploadAlert.textContent = '';
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!merchantsFile.files.length) return;
+
+        hideError();
+        uploadProgress.style.display = 'block';
+        btnUploadSubmit.disabled = true;
+        badgeStatus.className = 'badge bg-primary';
+        badgeStatus.textContent = 'Processing...';
+
+        const formData = new FormData(uploadForm);
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            const resp = await fetch('/api/data/upload', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+
+            const data = await resp.json();
+            if (!resp.ok) {
+                throw new Error(data.error || "Batch ingestion failed");
+            }
+
+            // Populate Results
+            document.getElementById('statProcessed').textContent = data.rows_processed || 0;
+            document.getElementById('statCompleteness').textContent = data.data_completeness || "100%";
+            
+            let holdCount = 0;
+            const tbody = document.getElementById('resultsTableBody');
+            tbody.innerHTML = '';
+
+            const samples = data.sample_assessments || [];
+            samples.forEach(s => {
+                if (s.decision === 'Hold') holdCount++;
+                const tr = document.createElement('tr');
+                const badgeCls = s.decision === 'Hold' ? 'bg-danger' : (s.decision === 'Review' ? 'bg-warning text-dark' : 'bg-success');
+                const reasonText = (s.reasons && s.reasons.length > 0) ? s.reasons[0] : 'Low risk profile';
+                
+                tr.innerHTML = `
+                    <td class="fw-bold">${s.merchant_id}</td>
+                    <td><span class="badge bg-light text-dark border">${s.business_category || 'N/A'}</span></td>
+                    <td class="fw-bold">${(s.risk_score * 100).toFixed(1)}%</td>
+                    <td><span class="badge ${badgeCls}">${s.decision}</span></td>
+                    <td class="small text-truncate" style="max-width: 200px;" title="${reasonText}">${reasonText}</td>
+                    <td class="text-end">
+                        <a href="/risk/${s.merchant_id}" class="btn btn-sm btn-outline-secondary py-0" title="Risk Assessment"><i class="bi bi-shield-check"></i></a>
+                        <a href="/network/${s.merchant_id}" class="btn btn-sm btn-outline-secondary py-0" title="Fraud Network"><i class="bi bi-diagram-3"></i></a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('statHold').textContent = holdCount;
+
+            resultsEmpty.style.display = 'none';
+            resultsContainer.style.display = 'block';
+            badgeStatus.className = 'badge bg-success';
+            badgeStatus.textContent = 'Complete';
+
+        } catch (err) {
+            showError(err.message);
+            badgeStatus.className = 'badge bg-danger';
+            badgeStatus.textContent = 'Error';
+        } finally {
+            uploadProgress.style.display = 'none';
+            btnUploadSubmit.disabled = false;
+        }
+    });
+</script>
+{% endblock %}

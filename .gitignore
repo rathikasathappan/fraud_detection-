@@ -1,0 +1,35 @@
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Model binary artifacts & archives
+models/*.pkl
+models/archive_*
+*.pkl
+
+# Log files & diagnostics
+*.log
+logs/
+.system_generated/
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary incoming batch files
+data/incoming/*.csv
+

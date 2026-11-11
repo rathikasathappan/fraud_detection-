@@ -1,0 +1,23 @@
+# Core Data Science & ML
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+xgboost>=2.0.0
+shap>=0.44.0
+
+# Graph Analytics
+networkx>=3.0
+python-louvain>=0.16
+
+# Web Backend & Database
+flask>=3.0.0
+flask-wtf>=1.2.0
+mysql-connector-python>=8.0.0
+python-dotenv>=1.0.0
+
+# Testing & Utilities
+pytest>=7.0.0
+
+# Optional Meta-Learning (Phase 7)
+torch>=2.0.0
+

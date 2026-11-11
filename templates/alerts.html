@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% set page_key = "alerts" %}
+{% block title %}Alerts & Investigation - FraudGuard{% endblock %}
+{% block page_title %}Alerts & Investigation{% endblock %}
+{% block page_subtitle %}Review alerts and record investigation outcomes{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <h1>Alerts</h1>
+    <p>Filter alerts and update their investigation cases.</p>
+</div>
+
+<section class="card mb-4">
+    <div class="card-header"><span>Filters</span><i class="bi bi-funnel text-secondary" aria-hidden="true"></i></div>
+    <div class="card-body">
+        <form class="row g-3 align-items-end" method="get" action="{{ url_for('alerts_page') }}">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="statusFilter">Status</label>
+                <select class="form-select" id="statusFilter" name="status">
+                    <option value=""{% if not selected_status %} selected{% endif %}>All statuses</option>
+                    {% for status in ['OPEN', 'ACKNOWLEDGED', 'RESOLVED'] %}<option value="{{ status }}"{% if selected_status == status %} selected{% endif %}>{{ status.title() }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="severityFilter">Severity</label>
+                <select class="form-select" id="severityFilter" name="severity">
+                    <option value=""{% if not selected_severity %} selected{% endif %}>All severities</option>
+                    {% for severity in ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] %}<option value="{{ severity }}"{% if selected_severity == severity %} selected{% endif %}>{{ severity.title() }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-4 d-flex gap-2">
+                <button class="btn btn-primary flex-grow-1" type="submit"><i class="bi bi-funnel me-1" aria-hidden="true"></i>Apply filters</button>
+                <a class="btn btn-outline-secondary" href="{{ url_for('alerts_page') }}">Clear</a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card">
+    <div class="card-header"><span>Alert queue</span><span class="text-secondary small">{{ alerts|length }} shown</span></div>
+    <div class="card-body">
+        {% if error %}
+        <div class="state-message state-error" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error }}</div>
+        {% elif not alerts %}
+        <div class="state-message state-empty"><i class="bi bi-inbox" aria-hidden="true"></i>No alerts match these filters.</div>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Severity</th><th>Merchant</th><th>Reason</th><th>Status</th><th>Created</th><th>Investigation</th></tr></thead>
+                <tbody>
+                {% for alert in alerts %}
+                    {% set severity_class = 'risk-hold' if alert.severity in ['HIGH', 'CRITICAL'] else 'risk-review' if alert.severity == 'MEDIUM' else 'risk-approve' %}
+                    <tr class="align-top">
+                        <td><span class="risk-badge {{ severity_class }}">{{ alert.severity }}</span></td>
+                        <td><a href="{{ url_for('risk_assessment', merchant_id=alert.merchant_id) }}">{{ alert.merchant_id }}</a></td>
+                        <td><div class="fw-semibold">{{ alert.alert_type }}</div><div class="text-secondary small">{{ alert.details }}</div></td>
+                        <td>{{ alert.alert_status }}</td>
+                        <td class="text-nowrap">{{ alert.created_at }}</td>
+                        <td>
+                            {% if alert.case_id %}
+                            <form class="case-update-form" data-case-id="{{ alert.case_id }}">
+                                <label class="form-label" for="caseStatus-{{ alert.case_id }}">Case status</label>
+                                <select class="form-select form-select-sm mb-2" id="caseStatus-{{ alert.case_id }}" name="status" required>
+                                    {% for case_status in ['Open', 'In review', 'Closed'] %}<option value="{{ case_status }}"{% if alert.case_status == case_status %} selected{% endif %}>{{ case_status }}</option>{% endfor %}
+                                </select>
+                                <label class="form-label" for="caseDecision-{{ alert.case_id }}">Decision</label>
+                                <select class="form-select form-select-sm mb-2" id="caseDecision-{{ alert.case_id }}" name="decision">
+                                    <option value="">No decision</option>
+                                    {% for decision in ['Confirm fraud', 'False positive', 'Needs more info'] %}<option value="{{ decision }}"{% if alert.case_decision == decision %} selected{% endif %}>{{ decision }}</option>{% endfor %}
+                                </select>
+                                <label class="form-label" for="caseNotes-{{ alert.case_id }}">Notes</label>
+                                <textarea class="form-control form-control-sm mb-2" id="caseNotes-{{ alert.case_id }}" name="notes" rows="2" maxlength="10000">{{ alert.case_notes or '' }}</textarea>
+                                <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-save me-1" aria-hidden="true"></i>Save case</button>
+                                <div class="case-save-state small mt-2" role="status" aria-live="polite"></div>
+                            </form>
+                            {% else %}
+                            <span class="text-secondary small">No case is linked to this alert.</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const alertCsrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    document.querySelectorAll('.case-update-form').forEach((form) => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const button = form.querySelector('button[type="submit"]');
+            const state = form.querySelector('.case-save-state');
+            const values = new FormData(form);
+            button.disabled = true;
+            state.className = 'case-save-state small mt-2 state-loading';
+            state.textContent = 'Saving case…';
+            try {
+                const response = await fetch(`/api/investigation-cases/${encodeURIComponent(form.dataset.caseId)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': alertCsrfToken },
+                    body: JSON.stringify({
+                        status: values.get('status'),
+                        decision: values.get('decision') || null,
+                        notes: values.get('notes') || ''
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || `Update failed (${response.status})`);
+                state.className = 'case-save-state small mt-2 text-success';
+                state.textContent = 'Case updated and audit logged.';
+            } catch (error) {
+                state.className = 'case-save-state small mt-2 state-error';
+                state.textContent = error.message || 'Case could not be updated.';
+            } finally {
+                button.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

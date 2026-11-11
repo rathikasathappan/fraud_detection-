@@ -1,0 +1,2077 @@
+{
+  "protocol": {
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "split": "75/25 GroupShuffleSplit; named fraud-ring members share a group; ungrouped merchants are individual groups",
+    "graph_features": "Recomputed separately per seed using only that split's training labels and temporal prior edges",
+    "evaluation": "All models use the same Travel test query per seed; cold_start_query is the zero-transaction subset",
+    "xgboost_threshold": 0.5,
+    "maml": "First-order MAML; held-out-category support comes from training only; threshold maximizes support-set F1; support rows are excluded from test query",
+    "maml_epochs": 20
+  },
+  "runs": [
+    {
+      "seed": 42,
+      "split": {
+        "train_rows": 3751,
+        "test_rows": 1249,
+        "train_groups": 3639,
+        "test_groups": 1213,
+        "group_overlap": 0,
+        "held_out_category": "Travel",
+        "query_rows": 128,
+        "query_positive_count": 8
+      },
+      "models": {
+        "xgboost_tabular": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 128,
+              "positive_count": 8,
+              "pr_auc": 0.9583,
+              "roc_auc": 0.9958,
+              "precision": 0.6364,
+              "recall": 0.875,
+              "f1": 0.7368,
+              "false_positive_rate": 0.0333,
+              "true_positives": 7,
+              "false_positives": 4,
+              "true_negatives": 116,
+              "false_negatives": 1
+            },
+            "cold_start_query": {
+              "sample_count": 58,
+              "positive_count": 7,
+              "pr_auc": 0.9571,
+              "roc_auc": 0.9916,
+              "precision": 0.6667,
+              "recall": 0.8571,
+              "f1": 0.75,
+              "false_positive_rate": 0.0588,
+              "true_positives": 6,
+              "false_positives": 3,
+              "true_negatives": 48,
+              "false_negatives": 1
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.10696815
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.05847758
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.07555019
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.07547043
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.21885107
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.09066806
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.13340132
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.13777715
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.10283613
+            }
+          ]
+        },
+        "xgboost_graph": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 128,
+              "positive_count": 8,
+              "pr_auc": 0.9583,
+              "roc_auc": 0.9958,
+              "precision": 0.6667,
+              "recall": 1.0,
+              "f1": 0.8,
+              "false_positive_rate": 0.0333,
+              "true_positives": 8,
+              "false_positives": 4,
+              "true_negatives": 116,
+              "false_negatives": 0
+            },
+            "cold_start_query": {
+              "sample_count": 58,
+              "positive_count": 7,
+              "pr_auc": 0.9571,
+              "roc_auc": 0.9916,
+              "precision": 0.7,
+              "recall": 1.0,
+              "f1": 0.8235,
+              "false_positive_rate": 0.0588,
+              "true_positives": 7,
+              "false_positives": 3,
+              "true_negatives": 48,
+              "false_negatives": 0
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.0527992
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.02509834
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.03011981
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.03563916
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.1011267
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.03003404
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.03527579
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.03054829
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.04805145
+            },
+            {
+              "feature": "num__bank_share_count",
+              "importance": 0.02787892
+            },
+            {
+              "feature": "num__device_share_count",
+              "importance": 0.00748447
+            },
+            {
+              "feature": "num__ip_share_count",
+              "importance": 0.02344377
+            },
+            {
+              "feature": "num__connected_component_size",
+              "importance": 0.04100909
+            },
+            {
+              "feature": "num__neighbours_flagged_fraud",
+              "importance": 0.1221563
+            },
+            {
+              "feature": "num__louvain_community_fraud_rate",
+              "importance": 0.38933468
+            }
+          ]
+        },
+        "maml": {
+          "shots": {
+            "5": {
+              "threshold": 0.882689,
+              "support_count": 5,
+              "support_positive_count": 1,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 128,
+                  "positive_count": 8,
+                  "pr_auc": 0.8842,
+                  "roc_auc": 0.8948,
+                  "precision": 1.0,
+                  "recall": 0.25,
+                  "f1": 0.4,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 2,
+                  "false_positives": 0,
+                  "true_negatives": 120,
+                  "false_negatives": 6
+                },
+                "cold_start_query": {
+                  "sample_count": 58,
+                  "positive_count": 7,
+                  "pr_auc": 0.8771,
+                  "roc_auc": 0.8796,
+                  "precision": 1.0,
+                  "recall": 0.2857,
+                  "f1": 0.4444,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 2,
+                  "false_positives": 0,
+                  "true_negatives": 51,
+                  "false_negatives": 5
+                }
+              }
+            },
+            "10": {
+              "threshold": 0.471948,
+              "support_count": 10,
+              "support_positive_count": 2,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 128,
+                  "positive_count": 8,
+                  "pr_auc": 0.8872,
+                  "roc_auc": 0.9229,
+                  "precision": 0.875,
+                  "recall": 0.875,
+                  "f1": 0.875,
+                  "false_positive_rate": 0.0083,
+                  "true_positives": 7,
+                  "false_positives": 1,
+                  "true_negatives": 119,
+                  "false_negatives": 1
+                },
+                "cold_start_query": {
+                  "sample_count": 58,
+                  "positive_count": 7,
+                  "pr_auc": 0.8874,
+                  "roc_auc": 0.9272,
+                  "precision": 0.8571,
+                  "recall": 0.8571,
+                  "f1": 0.8571,
+                  "false_positive_rate": 0.0196,
+                  "true_positives": 6,
+                  "false_positives": 1,
+                  "true_negatives": 50,
+                  "false_negatives": 1
+                }
+              }
+            },
+            "20": {
+              "threshold": 0.776899,
+              "support_count": 20,
+              "support_positive_count": 4,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 128,
+                  "positive_count": 8,
+                  "pr_auc": 0.8862,
+                  "roc_auc": 0.9156,
+                  "precision": 1.0,
+                  "recall": 0.625,
+                  "f1": 0.7692,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 5,
+                  "false_positives": 0,
+                  "true_negatives": 120,
+                  "false_negatives": 3
+                },
+                "cold_start_query": {
+                  "sample_count": 58,
+                  "positive_count": 7,
+                  "pr_auc": 0.8828,
+                  "roc_auc": 0.9104,
+                  "precision": 1.0,
+                  "recall": 0.5714,
+                  "f1": 0.7273,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 4,
+                  "false_positives": 0,
+                  "true_negatives": 51,
+                  "false_negatives": 3
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "seed": 43,
+      "split": {
+        "train_rows": 3771,
+        "test_rows": 1229,
+        "train_groups": 3639,
+        "test_groups": 1213,
+        "group_overlap": 0,
+        "held_out_category": "Travel",
+        "query_rows": 140,
+        "query_positive_count": 8
+      },
+      "models": {
+        "xgboost_tabular": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 140,
+              "positive_count": 8,
+              "pr_auc": 0.7855,
+              "roc_auc": 0.9124,
+              "precision": 0.2857,
+              "recall": 0.75,
+              "f1": 0.4138,
+              "false_positive_rate": 0.1136,
+              "true_positives": 6,
+              "false_positives": 15,
+              "true_negatives": 117,
+              "false_negatives": 2
+            },
+            "cold_start_query": {
+              "sample_count": 59,
+              "positive_count": 7,
+              "pr_auc": 0.8874,
+              "roc_auc": 0.9299,
+              "precision": 0.3333,
+              "recall": 0.8571,
+              "f1": 0.48,
+              "false_positive_rate": 0.2308,
+              "true_positives": 6,
+              "false_positives": 12,
+              "true_negatives": 40,
+              "false_negatives": 1
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.08281089
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.09220344
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.06800048
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.06921019
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.28206959
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.1069888
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.06608389
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.10170399
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.13092878
+            }
+          ]
+        },
+        "xgboost_graph": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 140,
+              "positive_count": 8,
+              "pr_auc": 0.7747,
+              "roc_auc": 0.9299,
+              "precision": 0.3529,
+              "recall": 0.75,
+              "f1": 0.48,
+              "false_positive_rate": 0.0833,
+              "true_positives": 6,
+              "false_positives": 11,
+              "true_negatives": 121,
+              "false_negatives": 2
+            },
+            "cold_start_query": {
+              "sample_count": 59,
+              "positive_count": 7,
+              "pr_auc": 0.8661,
+              "roc_auc": 0.9231,
+              "precision": 0.4,
+              "recall": 0.8571,
+              "f1": 0.5455,
+              "false_positive_rate": 0.1731,
+              "true_positives": 6,
+              "false_positives": 9,
+              "true_negatives": 43,
+              "false_negatives": 1
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.046553
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.06639713
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.04196084
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.05951098
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.22081549
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.03942294
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.04806211
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.03520883
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.08278102
+            },
+            {
+              "feature": "num__bank_share_count",
+              "importance": 0.04544494
+            },
+            {
+              "feature": "num__device_share_count",
+              "importance": 0.01675821
+            },
+            {
+              "feature": "num__ip_share_count",
+              "importance": 0.04277349
+            },
+            {
+              "feature": "num__connected_component_size",
+              "importance": 0.05832874
+            },
+            {
+              "feature": "num__neighbours_flagged_fraud",
+              "importance": 0.01532967
+            },
+            {
+              "feature": "num__louvain_community_fraud_rate",
+              "importance": 0.18065253
+            }
+          ]
+        },
+        "maml": {
+          "shots": {
+            "5": {
+              "threshold": 0.967708,
+              "support_count": 5,
+              "support_positive_count": 1,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 140,
+                  "positive_count": 8,
+                  "pr_auc": 0.5502,
+                  "roc_auc": 0.8712,
+                  "precision": 0.0,
+                  "recall": 0.0,
+                  "f1": 0.0,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 0,
+                  "false_positives": 0,
+                  "true_negatives": 132,
+                  "false_negatives": 8
+                },
+                "cold_start_query": {
+                  "sample_count": 59,
+                  "positive_count": 7,
+                  "pr_auc": 0.7745,
+                  "roc_auc": 0.9451,
+                  "precision": 0.0,
+                  "recall": 0.0,
+                  "f1": 0.0,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 0,
+                  "false_positives": 0,
+                  "true_negatives": 52,
+                  "false_negatives": 7
+                }
+              }
+            },
+            "10": {
+              "threshold": 0.889151,
+              "support_count": 10,
+              "support_positive_count": 2,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 140,
+                  "positive_count": 8,
+                  "pr_auc": 0.57,
+                  "roc_auc": 0.8693,
+                  "precision": 1.0,
+                  "recall": 0.125,
+                  "f1": 0.2222,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 1,
+                  "false_positives": 0,
+                  "true_negatives": 132,
+                  "false_negatives": 7
+                },
+                "cold_start_query": {
+                  "sample_count": 59,
+                  "positive_count": 7,
+                  "pr_auc": 0.838,
+                  "roc_auc": 0.9533,
+                  "precision": 1.0,
+                  "recall": 0.1429,
+                  "f1": 0.25,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 1,
+                  "false_positives": 0,
+                  "true_negatives": 52,
+                  "false_negatives": 6
+                }
+              }
+            },
+            "20": {
+              "threshold": 0.865035,
+              "support_count": 20,
+              "support_positive_count": 4,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 140,
+                  "positive_count": 8,
+                  "pr_auc": 0.5179,
+                  "roc_auc": 0.8598,
+                  "precision": 1.0,
+                  "recall": 0.25,
+                  "f1": 0.4,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 2,
+                  "false_positives": 0,
+                  "true_negatives": 132,
+                  "false_negatives": 6
+                },
+                "cold_start_query": {
+                  "sample_count": 59,
+                  "positive_count": 7,
+                  "pr_auc": 0.6785,
+                  "roc_auc": 0.9231,
+                  "precision": 1.0,
+                  "recall": 0.2857,
+                  "f1": 0.4444,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 2,
+                  "false_positives": 0,
+                  "true_negatives": 52,
+                  "false_negatives": 5
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "seed": 44,
+      "split": {
+        "train_rows": 3739,
+        "test_rows": 1261,
+        "train_groups": 3639,
+        "test_groups": 1213,
+        "group_overlap": 0,
+        "held_out_category": "Travel",
+        "query_rows": 120,
+        "query_positive_count": 7
+      },
+      "models": {
+        "xgboost_tabular": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 120,
+              "positive_count": 7,
+              "pr_auc": 0.6119,
+              "roc_auc": 0.7699,
+              "precision": 0.3333,
+              "recall": 0.5714,
+              "f1": 0.4211,
+              "false_positive_rate": 0.0708,
+              "true_positives": 4,
+              "false_positives": 8,
+              "true_negatives": 105,
+              "false_negatives": 3
+            },
+            "cold_start_query": {
+              "sample_count": 54,
+              "positive_count": 4,
+              "pr_auc": 0.7756,
+              "roc_auc": 0.83,
+              "precision": 0.2727,
+              "recall": 0.75,
+              "f1": 0.4,
+              "false_positive_rate": 0.16,
+              "true_positives": 3,
+              "false_positives": 8,
+              "true_negatives": 42,
+              "false_negatives": 1
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.07400745
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.10725216
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.09018818
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.06191658
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.21352026
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.05111721
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.04600468
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.21786395
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.13812956
+            }
+          ]
+        },
+        "xgboost_graph": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 120,
+              "positive_count": 7,
+              "pr_auc": 0.6143,
+              "roc_auc": 0.787,
+              "precision": 0.4,
+              "recall": 0.5714,
+              "f1": 0.4706,
+              "false_positive_rate": 0.0531,
+              "true_positives": 4,
+              "false_positives": 6,
+              "true_negatives": 107,
+              "false_negatives": 3
+            },
+            "cold_start_query": {
+              "sample_count": 54,
+              "positive_count": 4,
+              "pr_auc": 0.7794,
+              "roc_auc": 0.8525,
+              "precision": 0.4286,
+              "recall": 0.75,
+              "f1": 0.5455,
+              "false_positive_rate": 0.08,
+              "true_positives": 3,
+              "false_positives": 4,
+              "true_negatives": 46,
+              "false_negatives": 1
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.06938786
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.08942027
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.05749992
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.05159276
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.20752384
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.03022869
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.03300811
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.03342131
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.08302615
+            },
+            {
+              "feature": "num__bank_share_count",
+              "importance": 0.0184462
+            },
+            {
+              "feature": "num__device_share_count",
+              "importance": 0.0057656
+            },
+            {
+              "feature": "num__ip_share_count",
+              "importance": 0.04387778
+            },
+            {
+              "feature": "num__connected_component_size",
+              "importance": 0.04910697
+            },
+            {
+              "feature": "num__neighbours_flagged_fraud",
+              "importance": 0.08461887
+            },
+            {
+              "feature": "num__louvain_community_fraud_rate",
+              "importance": 0.14307564
+            }
+          ]
+        },
+        "maml": {
+          "shots": {
+            "5": {
+              "threshold": 0.546826,
+              "support_count": 5,
+              "support_positive_count": 1,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 120,
+                  "positive_count": 7,
+                  "pr_auc": 0.5194,
+                  "roc_auc": 0.8091,
+                  "precision": 1.0,
+                  "recall": 0.2857,
+                  "f1": 0.4444,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 2,
+                  "false_positives": 0,
+                  "true_negatives": 113,
+                  "false_negatives": 5
+                },
+                "cold_start_query": {
+                  "sample_count": 54,
+                  "positive_count": 4,
+                  "pr_auc": 0.5306,
+                  "roc_auc": 0.9,
+                  "precision": 1.0,
+                  "recall": 0.25,
+                  "f1": 0.4,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 1,
+                  "false_positives": 0,
+                  "true_negatives": 50,
+                  "false_negatives": 3
+                }
+              }
+            },
+            "10": {
+              "threshold": 0.392861,
+              "support_count": 10,
+              "support_positive_count": 2,
+              "support_f1_at_selected_threshold": 0.8,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 120,
+                  "positive_count": 7,
+                  "pr_auc": 0.5026,
+                  "roc_auc": 0.7358,
+                  "precision": 1.0,
+                  "recall": 0.2857,
+                  "f1": 0.4444,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 2,
+                  "false_positives": 0,
+                  "true_negatives": 113,
+                  "false_negatives": 5
+                },
+                "cold_start_query": {
+                  "sample_count": 54,
+                  "positive_count": 4,
+                  "pr_auc": 0.5875,
+                  "roc_auc": 0.92,
+                  "precision": 1.0,
+                  "recall": 0.25,
+                  "f1": 0.4,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 1,
+                  "false_positives": 0,
+                  "true_negatives": 50,
+                  "false_negatives": 3
+                }
+              }
+            },
+            "20": {
+              "threshold": 0.327801,
+              "support_count": 20,
+              "support_positive_count": 4,
+              "support_f1_at_selected_threshold": 0.8889,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 120,
+                  "positive_count": 7,
+                  "pr_auc": 0.5039,
+                  "roc_auc": 0.7472,
+                  "precision": 0.2,
+                  "recall": 0.5714,
+                  "f1": 0.2963,
+                  "false_positive_rate": 0.1416,
+                  "true_positives": 4,
+                  "false_positives": 16,
+                  "true_negatives": 97,
+                  "false_negatives": 3
+                },
+                "cold_start_query": {
+                  "sample_count": 54,
+                  "positive_count": 4,
+                  "pr_auc": 0.5635,
+                  "roc_auc": 0.87,
+                  "precision": 0.3,
+                  "recall": 0.75,
+                  "f1": 0.4286,
+                  "false_positive_rate": 0.14,
+                  "true_positives": 3,
+                  "false_positives": 7,
+                  "true_negatives": 43,
+                  "false_negatives": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "seed": 45,
+      "split": {
+        "train_rows": 3755,
+        "test_rows": 1245,
+        "train_groups": 3639,
+        "test_groups": 1213,
+        "group_overlap": 0,
+        "held_out_category": "Travel",
+        "query_rows": 109,
+        "query_positive_count": 10
+      },
+      "models": {
+        "xgboost_tabular": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 109,
+              "positive_count": 10,
+              "pr_auc": 0.9909,
+              "roc_auc": 0.999,
+              "precision": 0.7692,
+              "recall": 1.0,
+              "f1": 0.8696,
+              "false_positive_rate": 0.0303,
+              "true_positives": 10,
+              "false_positives": 3,
+              "true_negatives": 96,
+              "false_negatives": 0
+            },
+            "cold_start_query": {
+              "sample_count": 49,
+              "positive_count": 7,
+              "pr_auc": 1.0,
+              "roc_auc": 1.0,
+              "precision": 0.7778,
+              "recall": 1.0,
+              "f1": 0.875,
+              "false_positive_rate": 0.0476,
+              "true_positives": 7,
+              "false_positives": 2,
+              "true_negatives": 40,
+              "false_negatives": 0
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.07931909
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.09037463
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.08208433
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.07478821
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.28736758
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.08638111
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.08630224
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.08346164
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.12992111
+            }
+          ]
+        },
+        "xgboost_graph": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 109,
+              "positive_count": 10,
+              "pr_auc": 0.9286,
+              "roc_auc": 0.9753,
+              "precision": 0.6923,
+              "recall": 0.9,
+              "f1": 0.7826,
+              "false_positive_rate": 0.0404,
+              "true_positives": 9,
+              "false_positives": 4,
+              "true_negatives": 95,
+              "false_negatives": 1
+            },
+            "cold_start_query": {
+              "sample_count": 49,
+              "positive_count": 7,
+              "pr_auc": 0.8916,
+              "roc_auc": 0.9269,
+              "precision": 0.6667,
+              "recall": 0.8571,
+              "f1": 0.75,
+              "false_positive_rate": 0.0714,
+              "true_positives": 6,
+              "false_positives": 3,
+              "true_negatives": 39,
+              "false_negatives": 1
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.02922735
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.06118271
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.03195173
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.0353718
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.14846849
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.03678918
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.04472853
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.0362908
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.06102435
+            },
+            {
+              "feature": "num__bank_share_count",
+              "importance": 0.06213628
+            },
+            {
+              "feature": "num__device_share_count",
+              "importance": 0.00624626
+            },
+            {
+              "feature": "num__ip_share_count",
+              "importance": 0.03865108
+            },
+            {
+              "feature": "num__connected_component_size",
+              "importance": 0.04393632
+            },
+            {
+              "feature": "num__neighbours_flagged_fraud",
+              "importance": 0.14874539
+            },
+            {
+              "feature": "num__louvain_community_fraud_rate",
+              "importance": 0.21524978
+            }
+          ]
+        },
+        "maml": {
+          "shots": {
+            "5": {
+              "threshold": 0.474493,
+              "support_count": 5,
+              "support_positive_count": 1,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 109,
+                  "positive_count": 10,
+                  "pr_auc": 0.8832,
+                  "roc_auc": 0.9515,
+                  "precision": 1.0,
+                  "recall": 0.8,
+                  "f1": 0.8889,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 8,
+                  "false_positives": 0,
+                  "true_negatives": 99,
+                  "false_negatives": 2
+                },
+                "cold_start_query": {
+                  "sample_count": 49,
+                  "positive_count": 7,
+                  "pr_auc": 0.825,
+                  "roc_auc": 0.8741,
+                  "precision": 1.0,
+                  "recall": 0.7143,
+                  "f1": 0.8333,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 5,
+                  "false_positives": 0,
+                  "true_negatives": 42,
+                  "false_negatives": 2
+                }
+              }
+            },
+            "10": {
+              "threshold": 0.759186,
+              "support_count": 10,
+              "support_positive_count": 2,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 109,
+                  "positive_count": 10,
+                  "pr_auc": 0.8699,
+                  "roc_auc": 0.9424,
+                  "precision": 1.0,
+                  "recall": 0.7,
+                  "f1": 0.8235,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 7,
+                  "false_positives": 0,
+                  "true_negatives": 99,
+                  "false_negatives": 3
+                },
+                "cold_start_query": {
+                  "sample_count": 49,
+                  "positive_count": 7,
+                  "pr_auc": 0.8052,
+                  "roc_auc": 0.8639,
+                  "precision": 1.0,
+                  "recall": 0.5714,
+                  "f1": 0.7273,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 4,
+                  "false_positives": 0,
+                  "true_negatives": 42,
+                  "false_negatives": 3
+                }
+              }
+            },
+            "20": {
+              "threshold": 0.383773,
+              "support_count": 20,
+              "support_positive_count": 4,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 109,
+                  "positive_count": 10,
+                  "pr_auc": 0.8726,
+                  "roc_auc": 0.9414,
+                  "precision": 0.6154,
+                  "recall": 0.8,
+                  "f1": 0.6957,
+                  "false_positive_rate": 0.0505,
+                  "true_positives": 8,
+                  "false_positives": 5,
+                  "true_negatives": 94,
+                  "false_negatives": 2
+                },
+                "cold_start_query": {
+                  "sample_count": 49,
+                  "positive_count": 7,
+                  "pr_auc": 0.8107,
+                  "roc_auc": 0.8673,
+                  "precision": 0.5556,
+                  "recall": 0.7143,
+                  "f1": 0.625,
+                  "false_positive_rate": 0.0952,
+                  "true_positives": 5,
+                  "false_positives": 4,
+                  "true_negatives": 38,
+                  "false_negatives": 2
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "seed": 46,
+      "split": {
+        "train_rows": 3739,
+        "test_rows": 1261,
+        "train_groups": 3639,
+        "test_groups": 1213,
+        "group_overlap": 0,
+        "held_out_category": "Travel",
+        "query_rows": 132,
+        "query_positive_count": 14
+      },
+      "models": {
+        "xgboost_tabular": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 132,
+              "positive_count": 14,
+              "pr_auc": 0.7853,
+              "roc_auc": 0.9255,
+              "precision": 0.6429,
+              "recall": 0.6429,
+              "f1": 0.6429,
+              "false_positive_rate": 0.0424,
+              "true_positives": 9,
+              "false_positives": 5,
+              "true_negatives": 113,
+              "false_negatives": 5
+            },
+            "cold_start_query": {
+              "sample_count": 57,
+              "positive_count": 12,
+              "pr_auc": 0.825,
+              "roc_auc": 0.8852,
+              "precision": 0.8,
+              "recall": 0.6667,
+              "f1": 0.7273,
+              "false_positive_rate": 0.0444,
+              "true_positives": 8,
+              "false_positives": 2,
+              "true_negatives": 43,
+              "false_negatives": 4
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.10352948
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.05857756
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.1015547
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.06152508
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.25975239
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.07412392
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.07824909
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.14610314
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.11658464
+            }
+          ]
+        },
+        "xgboost_graph": {
+          "threshold": 0.5,
+          "metrics": {
+            "held_out_category_query": {
+              "sample_count": 132,
+              "positive_count": 14,
+              "pr_auc": 0.8192,
+              "roc_auc": 0.9437,
+              "precision": 0.8182,
+              "recall": 0.6429,
+              "f1": 0.72,
+              "false_positive_rate": 0.0169,
+              "true_positives": 9,
+              "false_positives": 2,
+              "true_negatives": 116,
+              "false_negatives": 5
+            },
+            "cold_start_query": {
+              "sample_count": 57,
+              "positive_count": 12,
+              "pr_auc": 0.8441,
+              "roc_auc": 0.9,
+              "precision": 0.8889,
+              "recall": 0.6667,
+              "f1": 0.7619,
+              "false_positive_rate": 0.0222,
+              "true_positives": 8,
+              "false_positives": 1,
+              "true_negatives": 44,
+              "false_negatives": 4
+            }
+          },
+          "feature_importance": [
+            {
+              "feature": "cat__business_category_Electronics",
+              "importance": 0.06691214
+            },
+            {
+              "feature": "cat__business_category_Fashion",
+              "importance": 0.04279082
+            },
+            {
+              "feature": "cat__business_category_Grocery",
+              "importance": 0.0406972
+            },
+            {
+              "feature": "cat__business_category_Travel",
+              "importance": 0.02999219
+            },
+            {
+              "feature": "num__business_age_days",
+              "importance": 0.17050338
+            },
+            {
+              "feature": "num__phone_verified",
+              "importance": 0.0272383
+            },
+            {
+              "feature": "num__email_verified",
+              "importance": 0.05573508
+            },
+            {
+              "feature": "num__document_verified",
+              "importance": 0.04646815
+            },
+            {
+              "feature": "num__transaction_count",
+              "importance": 0.06505716
+            },
+            {
+              "feature": "num__bank_share_count",
+              "importance": 0.04023991
+            },
+            {
+              "feature": "num__device_share_count",
+              "importance": 0.00328402
+            },
+            {
+              "feature": "num__ip_share_count",
+              "importance": 0.03942794
+            },
+            {
+              "feature": "num__connected_component_size",
+              "importance": 0.04749239
+            },
+            {
+              "feature": "num__neighbours_flagged_fraud",
+              "importance": 0.04023299
+            },
+            {
+              "feature": "num__louvain_community_fraud_rate",
+              "importance": 0.28392839
+            }
+          ]
+        },
+        "maml": {
+          "shots": {
+            "5": {
+              "threshold": 0.914395,
+              "support_count": 5,
+              "support_positive_count": 1,
+              "support_f1_at_selected_threshold": 1.0,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 132,
+                  "positive_count": 14,
+                  "pr_auc": 0.6595,
+                  "roc_auc": 0.8553,
+                  "precision": 1.0,
+                  "recall": 0.2143,
+                  "f1": 0.3529,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 3,
+                  "false_positives": 0,
+                  "true_negatives": 118,
+                  "false_negatives": 11
+                },
+                "cold_start_query": {
+                  "sample_count": 57,
+                  "positive_count": 12,
+                  "pr_auc": 0.6958,
+                  "roc_auc": 0.7963,
+                  "precision": 1.0,
+                  "recall": 0.25,
+                  "f1": 0.4,
+                  "false_positive_rate": 0.0,
+                  "true_positives": 3,
+                  "false_positives": 0,
+                  "true_negatives": 45,
+                  "false_negatives": 9
+                }
+              }
+            },
+            "10": {
+              "threshold": 0.730186,
+              "support_count": 10,
+              "support_positive_count": 2,
+              "support_f1_at_selected_threshold": 0.6667,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 132,
+                  "positive_count": 14,
+                  "pr_auc": 0.6524,
+                  "roc_auc": 0.8668,
+                  "precision": 0.8571,
+                  "recall": 0.4286,
+                  "f1": 0.5714,
+                  "false_positive_rate": 0.0085,
+                  "true_positives": 6,
+                  "false_positives": 1,
+                  "true_negatives": 117,
+                  "false_negatives": 8
+                },
+                "cold_start_query": {
+                  "sample_count": 57,
+                  "positive_count": 12,
+                  "pr_auc": 0.6866,
+                  "roc_auc": 0.8111,
+                  "precision": 0.8571,
+                  "recall": 0.5,
+                  "f1": 0.6316,
+                  "false_positive_rate": 0.0222,
+                  "true_positives": 6,
+                  "false_positives": 1,
+                  "true_negatives": 44,
+                  "false_negatives": 6
+                }
+              }
+            },
+            "20": {
+              "threshold": 0.422007,
+              "support_count": 20,
+              "support_positive_count": 4,
+              "support_f1_at_selected_threshold": 0.8889,
+              "support_examples_in_query": 0,
+              "metrics": {
+                "held_out_category_query": {
+                  "sample_count": 132,
+                  "positive_count": 14,
+                  "pr_auc": 0.6648,
+                  "roc_auc": 0.8535,
+                  "precision": 0.5714,
+                  "recall": 0.5714,
+                  "f1": 0.5714,
+                  "false_positive_rate": 0.0508,
+                  "true_positives": 8,
+                  "false_positives": 6,
+                  "true_negatives": 112,
+                  "false_negatives": 6
+                },
+                "cold_start_query": {
+                  "sample_count": 57,
+                  "positive_count": 12,
+                  "pr_auc": 0.7017,
+                  "roc_auc": 0.8148,
+                  "precision": 0.5385,
+                  "recall": 0.5833,
+                  "f1": 0.56,
+                  "false_positive_rate": 0.1333,
+                  "true_positives": 7,
+                  "false_positives": 6,
+                  "true_negatives": 39,
+                  "false_negatives": 5
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "summary": {
+    "xgboost_tabular": {
+      "held_out_category_query": {
+        "pr_auc": {
+          "mean": 0.8264,
+          "std": 0.1532,
+          "min": 0.6119,
+          "max": 0.9909,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.9205,
+          "std": 0.093,
+          "min": 0.7699,
+          "max": 0.999,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.5335,
+          "std": 0.2119,
+          "min": 0.2857,
+          "max": 0.7692,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.7679,
+          "std": 0.1731,
+          "min": 0.5714,
+          "max": 1.0,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.6168,
+          "std": 0.1991,
+          "min": 0.4138,
+          "max": 0.8696,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0581,
+          "std": 0.0349,
+          "min": 0.0303,
+          "max": 0.1136,
+          "n": 5
+        }
+      },
+      "cold_start_query": {
+        "pr_auc": {
+          "mean": 0.889,
+          "std": 0.0921,
+          "min": 0.7756,
+          "max": 1.0,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.9273,
+          "std": 0.0719,
+          "min": 0.83,
+          "max": 1.0,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.5701,
+          "std": 0.2499,
+          "min": 0.2727,
+          "max": 0.8,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.8262,
+          "std": 0.1259,
+          "min": 0.6667,
+          "max": 1.0,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.6465,
+          "std": 0.1987,
+          "min": 0.4,
+          "max": 0.875,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.1083,
+          "std": 0.0835,
+          "min": 0.0444,
+          "max": 0.2308,
+          "n": 5
+        }
+      }
+    },
+    "xgboost_graph": {
+      "held_out_category_query": {
+        "pr_auc": {
+          "mean": 0.819,
+          "std": 0.1372,
+          "min": 0.6143,
+          "max": 0.9583,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.9263,
+          "std": 0.0821,
+          "min": 0.787,
+          "max": 0.9958,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.586,
+          "std": 0.2004,
+          "min": 0.3529,
+          "max": 0.8182,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.7729,
+          "std": 0.1773,
+          "min": 0.5714,
+          "max": 1.0,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.6506,
+          "std": 0.1628,
+          "min": 0.4706,
+          "max": 0.8,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0454,
+          "std": 0.0249,
+          "min": 0.0169,
+          "max": 0.0833,
+          "n": 5
+        }
+      },
+      "cold_start_query": {
+        "pr_auc": {
+          "mean": 0.8677,
+          "std": 0.065,
+          "min": 0.7794,
+          "max": 0.9571,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.9188,
+          "std": 0.0503,
+          "min": 0.8525,
+          "max": 0.9916,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.6168,
+          "std": 0.2036,
+          "min": 0.4,
+          "max": 0.8889,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.8262,
+          "std": 0.1259,
+          "min": 0.6667,
+          "max": 1.0,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.6853,
+          "std": 0.1306,
+          "min": 0.5455,
+          "max": 0.8235,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0811,
+          "std": 0.056,
+          "min": 0.0222,
+          "max": 0.1731,
+          "n": 5
+        }
+      }
+    },
+    "maml_5_shot": {
+      "held_out_category_query": {
+        "pr_auc": {
+          "mean": 0.6993,
+          "std": 0.1762,
+          "min": 0.5194,
+          "max": 0.8842,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.8764,
+          "std": 0.0524,
+          "min": 0.8091,
+          "max": 0.9515,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.8,
+          "std": 0.4472,
+          "min": 0.0,
+          "max": 1.0,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.31,
+          "std": 0.2956,
+          "min": 0.0,
+          "max": 0.8,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.4172,
+          "std": 0.3169,
+          "min": 0.0,
+          "max": 0.8889,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 5
+        }
+      },
+      "cold_start_query": {
+        "pr_auc": {
+          "mean": 0.7406,
+          "std": 0.1351,
+          "min": 0.5306,
+          "max": 0.8771,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.879,
+          "std": 0.054,
+          "min": 0.7963,
+          "max": 0.9451,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.8,
+          "std": 0.4472,
+          "min": 0.0,
+          "max": 1.0,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.3,
+          "std": 0.2583,
+          "min": 0.0,
+          "max": 0.7143,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.4155,
+          "std": 0.2952,
+          "min": 0.0,
+          "max": 0.8333,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0,
+          "std": 0.0,
+          "min": 0.0,
+          "max": 0.0,
+          "n": 5
+        }
+      }
+    },
+    "maml_10_shot": {
+      "held_out_category_query": {
+        "pr_auc": {
+          "mean": 0.6964,
+          "std": 0.1746,
+          "min": 0.5026,
+          "max": 0.8872,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.8674,
+          "std": 0.0807,
+          "min": 0.7358,
+          "max": 0.9424,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.9464,
+          "std": 0.0736,
+          "min": 0.8571,
+          "max": 1.0,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.4829,
+          "std": 0.3045,
+          "min": 0.125,
+          "max": 0.875,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.5873,
+          "std": 0.2704,
+          "min": 0.2222,
+          "max": 0.875,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0034,
+          "std": 0.0046,
+          "min": 0.0,
+          "max": 0.0085,
+          "n": 5
+        }
+      },
+      "cold_start_query": {
+        "pr_auc": {
+          "mean": 0.7609,
+          "std": 0.122,
+          "min": 0.5875,
+          "max": 0.8874,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.8951,
+          "std": 0.0572,
+          "min": 0.8111,
+          "max": 0.9533,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.9428,
+          "std": 0.0783,
+          "min": 0.8571,
+          "max": 1.0,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.4643,
+          "std": 0.2812,
+          "min": 0.1429,
+          "max": 0.8571,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.5732,
+          "std": 0.2461,
+          "min": 0.25,
+          "max": 0.8571,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0084,
+          "std": 0.0115,
+          "min": 0.0,
+          "max": 0.0222,
+          "n": 5
+        }
+      }
+    },
+    "maml_20_shot": {
+      "held_out_category_query": {
+        "pr_auc": {
+          "mean": 0.6891,
+          "std": 0.1849,
+          "min": 0.5039,
+          "max": 0.8862,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.8635,
+          "std": 0.0749,
+          "min": 0.7472,
+          "max": 0.9414,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.6774,
+          "std": 0.3358,
+          "min": 0.2,
+          "max": 1.0,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.5636,
+          "std": 0.1988,
+          "min": 0.25,
+          "max": 0.8,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.5465,
+          "std": 0.1978,
+          "min": 0.2963,
+          "max": 0.7692,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0486,
+          "std": 0.0578,
+          "min": 0.0,
+          "max": 0.1416,
+          "n": 5
+        }
+      },
+      "cold_start_query": {
+        "pr_auc": {
+          "mean": 0.7274,
+          "std": 0.1235,
+          "min": 0.5635,
+          "max": 0.8828,
+          "n": 5
+        },
+        "roc_auc": {
+          "mean": 0.8771,
+          "std": 0.0426,
+          "min": 0.8148,
+          "max": 0.9231,
+          "n": 5
+        },
+        "precision": {
+          "mean": 0.6788,
+          "std": 0.3101,
+          "min": 0.3,
+          "max": 1.0,
+          "n": 5
+        },
+        "recall": {
+          "mean": 0.5809,
+          "std": 0.1828,
+          "min": 0.2857,
+          "max": 0.75,
+          "n": 5
+        },
+        "f1": {
+          "mean": 0.5571,
+          "std": 0.1253,
+          "min": 0.4286,
+          "max": 0.7273,
+          "n": 5
+        },
+        "false_positive_rate": {
+          "mean": 0.0737,
+          "std": 0.0694,
+          "min": 0.0,
+          "max": 0.14,
+          "n": 5
+        }
+      }
+    }
+  },
+  "feature_importance_mean_std": {
+    "xgboost_tabular": [
+      {
+        "feature": "num__business_age_days",
+        "mean": 0.25231218,
+        "std": 0.03462008
+      },
+      {
+        "feature": "num__document_verified",
+        "mean": 0.13738197,
+        "std": 0.05180223
+      },
+      {
+        "feature": "num__transaction_count",
+        "mean": 0.12368004,
+        "std": 0.01400979
+      },
+      {
+        "feature": "cat__business_category_Electronics",
+        "mean": 0.08932701,
+        "std": 0.01491834
+      },
+      {
+        "feature": "cat__business_category_Grocery",
+        "mean": 0.08347558,
+        "std": 0.01300134
+      },
+      {
+        "feature": "num__email_verified",
+        "mean": 0.08200824,
+        "std": 0.03249484
+      },
+      {
+        "feature": "num__phone_verified",
+        "mean": 0.08185582,
+        "std": 0.02082333
+      },
+      {
+        "feature": "cat__business_category_Fashion",
+        "mean": 0.08137707,
+        "std": 0.02186259
+      },
+      {
+        "feature": "cat__business_category_Travel",
+        "mean": 0.0685821,
+        "std": 0.00671919
+      }
+    ],
+    "xgboost_graph": [
+      {
+        "feature": "num__louvain_community_fraud_rate",
+        "mean": 0.2424482,
+        "std": 0.09712055
+      },
+      {
+        "feature": "num__business_age_days",
+        "mean": 0.16968758,
+        "std": 0.0479509
+      },
+      {
+        "feature": "num__neighbours_flagged_fraud",
+        "mean": 0.08221664,
+        "std": 0.05537038
+      },
+      {
+        "feature": "num__transaction_count",
+        "mean": 0.06798803,
+        "std": 0.01499606
+      },
+      {
+        "feature": "cat__business_category_Fashion",
+        "mean": 0.05697785,
+        "std": 0.02437462
+      },
+      {
+        "feature": "cat__business_category_Electronics",
+        "mean": 0.05297591,
+        "std": 0.01634663
+      },
+      {
+        "feature": "num__connected_component_size",
+        "mean": 0.0479747,
+        "std": 0.0065869
+      },
+      {
+        "feature": "num__email_verified",
+        "mean": 0.04336192,
+        "std": 0.00934935
+      },
+      {
+        "feature": "cat__business_category_Travel",
+        "mean": 0.04242138,
+        "std": 0.01251348
+      },
+      {
+        "feature": "cat__business_category_Grocery",
+        "mean": 0.0404459,
+        "std": 0.01086251
+      },
+      {
+        "feature": "num__bank_share_count",
+        "mean": 0.03882925,
+        "std": 0.01676569
+      },
+      {
+        "feature": "num__ip_share_count",
+        "mean": 0.03763481,
+        "std": 0.00823126
+      },
+      {
+        "feature": "num__document_verified",
+        "mean": 0.03638748,
+        "std": 0.00603972
+      },
+      {
+        "feature": "num__phone_verified",
+        "mean": 0.03274263,
+        "std": 0.00512238
+      },
+      {
+        "feature": "num__device_share_count",
+        "mean": 0.00790771,
+        "std": 0.00517779
+      }
+    ]
+  }
+}

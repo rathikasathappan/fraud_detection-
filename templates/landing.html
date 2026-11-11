@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0c062a">
+    <title>FraudGuard | Cold-start merchant risk, made visible</title>
+    <meta name="description" content="See how graph signals and explainable risk checks help assess new merchants before their first transaction.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <script src="{{ url_for('static', filename='js/landing.js') }}" defer></script>
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+        <nav class="navbar" aria-label="Main navigation">
+            <a class="wordmark" href="#top" aria-label="FraudGuard home">
+                <span class="wordmark-mark" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span>FraudGuard</span>
+            </a>
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open navigation">
+                <span></span><span></span>
+            </button>
+            <div class="nav-links" id="nav-links">
+                <a href="#product">Product</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#results">Results</a>
+                <a href="#faq">FAQ</a>
+                <a class="button button-mint nav-login" href="{{ url_for('login') }}">Login <span aria-hidden="true">↗</span></a>
+            </div>
+        </nav>
+    </header>
+
+    <main id="main">
+        <section class="hero section-wrap" id="top" aria-labelledby="hero-title">
+            <div class="hero-media" aria-hidden="true">
+                <img class="hero-media-poster" src="{{ url_for('static', filename='img/hero-poster.jpg') }}" alt="">
+                <video class="hero-background-video" autoplay muted loop playsinline preload="metadata" poster="{{ url_for('static', filename='img/hero-poster.jpg') }}" aria-hidden="true" tabindex="-1" data-src="{{ url_for('static', filename='video/hero.mp4') }}"></video>
+                <div class="hero-video-overlay"></div>
+            </div>
+            <button class="hero-video-toggle" type="button" data-video-toggle aria-pressed="false">
+                <span class="video-toggle-icon" aria-hidden="true">Ⅱ</span>
+                <span data-video-toggle-label>Pause background</span>
+            </button>
+            <div class="hero-copy reveal">
+                <p class="eyebrow"><span class="eyebrow-dot"></span>Cold-start merchant fraud detection</p>
+                <h1 id="hero-title">A new merchant.<br><span>A connected story.</span></h1>
+                <p class="hero-subtitle">See the links and signals that matter, before transaction history exists.</p>
+                <div class="hero-actions">
+                    <a class="button button-mint" href="{{ url_for('login') }}">Login <span aria-hidden="true">↗</span></a>
+                    <button class="button button-outline" type="button" data-open-explainer><span class="play-mini" aria-hidden="true">▶</span> See how it works</button>
+                </div>
+                <div class="hero-note"><span class="live-pip" aria-hidden="true"></span> Network-first risk signals <span class="note-divider"></span> Built for cold start</div>
+            </div>
+
+            <div class="hero-visual reveal">
+                <div class="visual-caption"><span>RELATIONSHIP SIGNALS</span><span class="caption-live"><i></i> SIMULATED</span></div>
+                <div class="network-scene">
+                    <svg class="network-svg" viewBox="0 0 600 460" role="img" aria-labelledby="network-title network-desc">
+                        <title id="network-title">Illustrated merchant relationship network</title>
+                        <desc id="network-desc">An original animated diagram in which a risk signal travels through linked merchant nodes.</desc>
+                        <defs>
+                            <radialGradient id="network-glow">
+                                <stop offset="0" stop-color="#8176ff" stop-opacity=".25"/>
+                                <stop offset="1" stop-color="#8176ff" stop-opacity="0"/>
+                            </radialGradient>
+                            <filter id="node-shadow" x="-80%" y="-80%" width="260%" height="260%">
+                                <feGaussianBlur stdDeviation="7" result="blur"/>
+                                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>
+                        </defs>
+                        <circle class="network-halo" cx="307" cy="235" r="205" fill="url(#network-glow)"/>
+                        <g class="network-links" fill="none">
+                            <path class="network-edge" data-edge="0-1" d="M92 93 227 130"/>
+                            <path class="network-edge" data-edge="1-2" d="m227 130 82 105"/>
+                            <path class="network-edge" data-edge="2-3" d="m309 235 151-31"/>
+                            <path class="network-edge" data-edge="2-4" d="m309 235-58 126"/>
+                            <path class="network-edge" data-edge="1-5" d="m227 130 233 74"/>
+                            <path class="network-edge" data-edge="4-6" d="m251 361 195-101"/>
+                            <path class="network-edge" data-edge="3-6" d="m460 204-14 56"/>
+                            <path class="network-edge" data-edge="0-7" d="M92 93 89 286"/>
+                            <path class="network-edge" data-edge="7-4" d="m89 286 162 75"/>
+                            <path class="network-edge" data-edge="5-3" d="m460 204 0-115"/>
+                            <path class="network-edge" data-edge="6-8" d="m446 260 65 112"/>
+                            <path class="network-edge" data-edge="4-8" d="m251 361 260 11"/>
+                        </g>
+                        <g class="network-nodes">
+                            <g class="network-node" data-node="0" transform="translate(92 93)"><circle class="node-halo" r="27"/><circle class="node-core" r="7"/><text y="31">MERCHANT</text></g>
+                            <g class="network-node" data-node="1" transform="translate(227 130)"><circle class="node-halo" r="25"/><circle class="node-core" r="6"/></g>
+                            <g class="network-node" data-node="2" transform="translate(309 235)"><circle class="node-halo" r="31"/><circle class="node-core" r="9"/><text y="40">SHARED DEVICE</text></g>
+                            <g class="network-node" data-node="3" transform="translate(460 204)"><circle class="node-halo" r="25"/><circle class="node-core" r="6"/></g>
+                            <g class="network-node" data-node="4" transform="translate(251 361)"><circle class="node-halo" r="27"/><circle class="node-core" r="7"/><text y="32">MERCHANT</text></g>
+                            <g class="network-node" data-node="5" transform="translate(460 89)"><circle class="node-halo" r="22"/><circle class="node-core" r="5"/></g>
+                            <g class="network-node" data-node="6" transform="translate(446 260)"><circle class="node-halo" r="27"/><circle class="node-core" r="7"/></g>
+                            <g class="network-node" data-node="7" transform="translate(89 286)"><circle class="node-halo" r="23"/><circle class="node-core" r="6"/></g>
+                            <g class="network-node" data-node="8" transform="translate(511 372)"><circle class="node-halo" r="22"/><circle class="node-core" r="5"/></g>
+                        </g>
+                    </svg>
+                    <div class="network-center-label"><span>NEW PROFILE</span><strong>0 transactions</strong></div>
+                    <button class="network-play" type="button" data-open-explainer aria-label="Play the FraudGuard explainer"><span aria-hidden="true">▶</span></button>
+                    <div class="floating-tag tag-top"><span class="tag-spark" aria-hidden="true">✳</span> shared device</div>
+                    <div class="floating-tag tag-bottom"><span class="tag-dot" aria-hidden="true"></span> pattern connected</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="tech-strip" aria-label="Technology stack">
+            <div class="tech-label">BUILT WITH</div>
+            <div class="tech-marquee">
+                <div class="tech-track">
+                    <span>Python</span><b>✳</b><span>Flask</span><b>✳</b><span>MySQL</span><b>✳</b><span>XGBoost</span><b>✳</b><span>NetworkX</span><b>✳</b><span>SHAP</span><b>✳</b><span>Chart.js</span><b>✳</b>
+                    <span aria-hidden="true">Python</span><b aria-hidden="true">✳</b><span aria-hidden="true">Flask</span><b aria-hidden="true">✳</b><span aria-hidden="true">MySQL</span><b aria-hidden="true">✳</b><span aria-hidden="true">XGBoost</span><b aria-hidden="true">✳</b><span aria-hidden="true">NetworkX</span><b aria-hidden="true">✳</b><span aria-hidden="true">SHAP</span><b aria-hidden="true">✳</b><span aria-hidden="true">Chart.js</span><b aria-hidden="true">✳</b>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-wrap feature-tabs-section" id="product" aria-labelledby="product-title">
+            <div class="section-heading reveal">
+                <p class="eyebrow">A clearer first look</p>
+                <h2 id="product-title">Detect risky merchants<br>before the first transaction</h2>
+                <p>Make early decisions with evidence you can inspect and explain.</p>
+            </div>
+            <div class="tab-layout reveal">
+                <div class="feature-tabs" role="tablist" aria-label="FraudGuard capabilities">
+                    <button class="feature-tab is-active" id="tab-graph" type="button" role="tab" aria-selected="true" aria-controls="panel-graph" tabindex="0" data-feature="graph">
+                        <span class="tab-progress"><i></i></span><span class="tab-count">01</span><span class="tab-text"><strong>Graph priors</strong><small>Look beyond the new account.</small></span><span class="tab-arrow" aria-hidden="true">↗</span>
+                    </button>
+                    <button class="feature-tab" id="tab-reasons" type="button" role="tab" aria-selected="false" aria-controls="panel-reasons" tabindex="-1" data-feature="reasons">
+                        <span class="tab-progress"><i></i></span><span class="tab-count">02</span><span class="tab-text"><strong>Explainable reasons</strong><small>Make every signal legible.</small></span><span class="tab-arrow" aria-hidden="true">↗</span>
+                    </button>
+                    <button class="feature-tab" id="tab-adaptation" type="button" role="tab" aria-selected="false" aria-controls="panel-adaptation" tabindex="-1" data-feature="adaptation">
+                        <span class="tab-progress"><i></i></span><span class="tab-count">03</span><span class="tab-text"><strong>Few-shot adaptation</strong><small>Learn from a small set of examples.</small></span><span class="tab-arrow" aria-hidden="true">↗</span>
+                    </button>
+                </div>
+                <div class="tab-art" aria-live="polite">
+                    <div class="tab-panel is-active" id="panel-graph" role="tabpanel" aria-labelledby="tab-graph" data-panel="graph">
+                        <div class="art-caption"><span>CONNECTION MAP</span><span>01 / 03</span></div>
+                        <svg viewBox="0 0 460 300" role="img" aria-label="Illustration of merchants connected through shared entities">
+                            <g class="art-lines"><path d="M80 80 220 145 365 78M80 80 110 240 220 145M220 145 300 245 365 78M110 240 300 245 365 78"/></g>
+                            <g class="art-nodes"><circle cx="80" cy="80" r="23"/><circle cx="220" cy="145" r="31"/><circle cx="365" cy="78" r="25"/><circle cx="110" cy="240" r="20"/><circle cx="300" cy="245" r="23"/></g>
+                            <text x="220" y="151" text-anchor="middle">DEVICE</text>
+                        </svg>
+                        <div class="art-legend"><span><i class="legend-mint"></i>New profile</span><span><i class="legend-purple"></i>Shared entity</span><span><i class="legend-red"></i>Risk signal</span></div>
+                    </div>
+                    <div class="tab-panel" id="panel-reasons" role="tabpanel" aria-labelledby="tab-reasons" data-panel="reasons" hidden>
+                        <div class="art-caption"><span>ASSESSMENT NOTES</span><span>02 / 03</span></div>
+                        <div class="reason-demo"><div><span class="reason-mark">01</span><span><strong>Device links to other profiles</strong><small>Network relationship · elevated</small></span><b>+0.28</b></div><div><span class="reason-mark">02</span><span><strong>Business history is limited</strong><small>Cold-start context · considered</small></span><b>+0.11</b></div><div><span class="reason-mark reason-mark-mint">03</span><span><strong>Verification signals are present</strong><small>Identity checks · reassuring</small></span><b>−0.08</b></div></div>
+                        <p class="art-footnote">Illustrative reasons · simulated example</p>
+                    </div>
+                    <div class="tab-panel" id="panel-adaptation" role="tabpanel" aria-labelledby="tab-adaptation" data-panel="adaptation" hidden>
+                        <div class="art-caption"><span>SMALL-SAMPLE LEARNING</span><span>03 / 03</span></div>
+                        <div class="adapt-art"><div class="adapt-orbit orbit-one"></div><div class="adapt-orbit orbit-two"></div><div class="adapt-core"><span>FEW</span><strong>EXAMPLES</strong></div><span class="adapt-point point-one">01</span><span class="adapt-point point-two">02</span><span class="adapt-point point-three">03</span><span class="adapt-label label-one">SUPPORT SET</span><span class="adapt-label label-two">NEW COHORT</span></div>
+                        <p class="art-footnote">A small support set informs a cohort-specific view.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-wrap cards-section" aria-label="Product features">
+            <div class="feature-card-grid">
+                <article class="feature-card reveal"><span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="5" cy="6" r="2"/><circle cx="18" cy="5" r="2"/><circle cx="12" cy="18" r="2"/><path d="m7 7 4 9m5-9-3 9m-6-9h9"/></svg></span><p class="card-overline">01 / EARLY SIGNAL</p><h3>Cold-start scoring</h3><p>Bring identity checks and network context into view while transaction history is still empty.</p></article>
+                <article class="feature-card reveal"><span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h5M8 16h3"/><path d="m15 15 2 2 4-5"/></svg></span><p class="card-overline">02 / CLEAR RATIONALE</p><h3>Explainable verdicts</h3><p>See the strongest contributing signals alongside the assessment, not behind a black box.</p></article>
+                <article class="feature-card reveal"><span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 20 6v5c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/><path d="m8 12 2.5 2.5L16 9"/></svg></span><p class="card-overline">03 / YOUR POLICY</p><h3>Policy-based decisions</h3><p>Translate risk signals into operational actions your team can review and apply consistently.</p></article>
+                <article class="feature-card reveal"><span class="icon-tile" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><circle cx="9" cy="10" r="1"/><circle cx="12" cy="10" r="1"/><circle cx="15" cy="10" r="1"/></svg></span><p class="card-overline">04 / HUMAN REVIEW</p><h3>Investigation workflow</h3><p>Move from a flagged relationship to an evidence-led review with a readable trail.</p></article>
+            </div>
+        </section>
+
+        <section class="workflow-section" id="how-it-works" aria-labelledby="workflow-title">
+            <div class="section-wrap workflow-layout">
+                <div class="workflow-copy reveal">
+                    <p class="eyebrow">From registration to review</p>
+                    <h2 id="workflow-title">How do you assess<br>a merchant with no history?</h2>
+                    <div class="workflow-steps" role="list">
+                        <div class="workflow-step is-current" role="listitem"><span>01</span><div><strong>Register</strong><small>Capture the basics at onboarding.</small></div><i></i></div>
+                        <div class="workflow-step" role="listitem"><span>02</span><div><strong>Graph check</strong><small>Find shared entities and connections.</small></div><i></i></div>
+                        <div class="workflow-step" role="listitem"><span>03</span><div><strong>Score</strong><small>Combine signals into an assessment.</small></div><i></i></div>
+                        <div class="workflow-step" role="listitem"><span>04</span><div><strong>Decide</strong><small>Review the verdict and its reasons.</small></div><i></i></div>
+                    </div>
+                    {% if database_response_ms is not none %}
+                    <div class="response-chip"><span class="response-icon" aria-hidden="true">◷</span><span>Database response</span><strong>{{ database_response_ms }} ms</strong><span class="sr-only">Measured by a read-only database check when this page loaded.</span></div>
+                    {% endif %}
+                </div>
+                <div class="assessment-preview reveal">
+                    <div class="preview-top"><span>EXAMPLE ASSESSMENT</span><span class="preview-id">SIMULATED</span></div>
+                    <div class="preview-merchant"><span class="merchant-avatar" aria-hidden="true">N</span><span><strong>Northstar Market</strong><small>New merchant · 0 transactions</small></span><span class="alert-dot" title="Simulated risk signal"></span></div>
+                    <div class="preview-score"><div><small>RISK INDICATOR</small><strong>Review recommended</strong></div><div class="score-ring"><span>0.68</span></div></div>
+                    <div class="preview-meter"><span></span></div>
+                    <div class="preview-reasons"><div><span class="reason-icon reason-icon-red">↗</span><span><strong>Shared device connection</strong><small>3 related profiles in this example</small></span><b>Elevated</b></div><div><span class="reason-icon reason-icon-purple">◌</span><span><strong>Limited operating history</strong><small>No prior transactions to compare</small></span><b>Context</b></div></div>
+                    <div class="preview-footer"><span><i></i> Illustrative data only</span><span>Assessment detail <b aria-hidden="true">↗</b></span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-wrap demo-section" id="demo" aria-labelledby="demo-title">
+            <div class="demo-intro reveal">
+                <p class="eyebrow">Try a simulated profile</p>
+                <h2 id="demo-title">See it in action</h2>
+                <p>Choose an example to request a temporary, predict-only assessment. Nothing is saved.</p>
+                <div class="demo-buttons" role="group" aria-label="Choose a simulated example">
+                    <button class="scenario-button" type="button" data-scenario="genuine"><span class="scenario-index">01</span>Genuine</button>
+                    <button class="scenario-button" type="button" data-scenario="shared_device"><span class="scenario-index">02</span>Shared device</button>
+                    <button class="scenario-button" type="button" data-scenario="fraud_ring"><span class="scenario-index">03</span>Fraud ring</button>
+                </div>
+                <p class="demo-disclaimer">Synthetic scenarios only · No login · No assessment data stored · Rate limited</p>
+            </div>
+            <div class="demo-result reveal" data-endpoint="{{ url_for('demo_predict') }}" aria-live="polite" aria-atomic="true">
+                <div class="demo-empty" data-demo-empty>
+                    <span class="empty-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M8 13h32v24H8zM15 20h18M15 26h12M15 32h7"/><path d="m31 8 4 5-4 5"/></svg></span>
+                    <strong>Your example assessment</strong>
+                    <span>Choose a scenario to see a prediction and its top reasons.</span>
+                </div>
+                <div class="demo-output" data-demo-output hidden>
+                    <div class="output-head"><span class="output-kicker">SIMULATED PREDICTION</span><span class="decision-badge" data-decision></span></div>
+                    <div class="output-risk"><span>Risk score</span><strong data-risk-score></strong></div>
+                    <div class="output-reasons-title">Top reasons</div>
+                    <ul class="output-reasons" data-reasons></ul>
+                </div>
+                <p class="demo-status" data-demo-status role="status"></p>
+            </div>
+        </section>
+
+        {% if landing_metrics %}
+        <section class="results-band" id="results" aria-labelledby="results-title">
+            <div class="section-wrap results-inner">
+                <div class="results-heading reveal"><p class="eyebrow">Signals, not promises</p><h2 id="results-title">Measured on simulated data</h2><p>Aggregate sample and saved evaluation results. No live merchant records.</p></div>
+                <div class="metrics-grid">
+                    {% for metric in landing_metrics %}
+                    <div class="metric-item reveal"><strong class="metric-number" data-value="{{ metric.value }}" data-suffix="{{ metric.suffix }}">{{ metric.value }}{{ metric.suffix }}</strong><span>{{ metric.label }}</span></div>
+                    {% endfor %}
+                </div>
+                <p class="results-footnote">All figures shown are based on simulated data and saved model evaluations.</p>
+            </div>
+        </section>
+        {% endif %}
+
+        <section class="section-wrap faq-section" id="faq" aria-labelledby="faq-title">
+            <div class="faq-heading reveal"><p class="eyebrow">A few useful details</p><h2 id="faq-title">Questions, answered.</h2></div>
+            <div class="faq-list reveal">
+                <details><summary>What does cold-start mean here?<span aria-hidden="true"></span></summary><p>A merchant is cold-start when there is little or no transaction history available. The assessment can still consider onboarding attributes and relationships among shared entities.</p></details>
+                <details><summary>How can a graph help assess a new merchant?<span aria-hidden="true"></span></summary><p>Relationships such as a shared device or account can provide context that a standalone profile does not show. The graph view helps an investigator inspect those connections.</p></details>
+                <details><summary>Can I understand why a profile was flagged?<span aria-hidden="true"></span></summary><p>Yes. The assessment presents contributing reasons so that an operator can review the signals and make a policy-led decision.</p></details>
+                <details><summary>What happens in the interactive demo?<span aria-hidden="true"></span></summary><p>It scores one of three fixed synthetic examples. The request is predict-only, rate limited, requires no login, and does not save assessment inputs or results.</p></details>
+                <details><summary>Are the metrics based on live merchants?<span aria-hidden="true"></span></summary><p>No. Metrics on this page come from simulated sample data and saved model evaluation results. They are not live production performance claims.</p></details>
+            </div>
+        </section>
+
+        <section class="final-cta section-wrap reveal" aria-labelledby="cta-title">
+            <div><p class="eyebrow">See the connections earlier</p><h2 id="cta-title">A stronger first look<br>starts with context.</h2></div>
+            <a class="button button-mint" href="{{ url_for('login') }}">Login to FraudGuard <span aria-hidden="true">↗</span></a>
+            <div class="cta-orbit" aria-hidden="true"></div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="section-wrap footer-inner"><a class="wordmark footer-wordmark" href="#top"><span class="wordmark-mark" aria-hidden="true"><span></span><span></span><span></span></span><span>FraudGuard</span></a><p>Cold-start risk, made more explainable.</p><span class="footer-note">All examples and metrics use simulated data.</span><a href="#top" class="back-top">Back to top ↑</a></div>
+    </footer>
+
+    <dialog class="explainer-dialog" aria-labelledby="explainer-title" aria-describedby="explainer-copy">
+        <div class="explainer-shell">
+            <button class="dialog-close" type="button" aria-label="Close explainer">×</button>
+            <div class="explainer-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+            <p class="eyebrow">A 15-second overview</p>
+            <div class="explainer-slides" aria-live="polite">
+                <div class="explainer-slide is-current"><h2 id="explainer-title">What’s the <em>problem</em> with new merchants?</h2><p id="explainer-copy">There is not enough history to tell the whole story.</p></div>
+                <div class="explainer-slide"><h2>No history.<br><em>No behaviour.</em><br>No warning.</h2><p>A blank profile can still have meaningful connections.</p></div>
+                <div class="explainer-slide"><h2>We check who they are <em>connected to.</em></h2><p>Shared signals give investigators more context to review.</p></div>
+            </div>
+            <div class="explainer-controls"><span class="slide-count">01 / 03</span><button class="button button-mint explainer-next" type="button">Next <span aria-hidden="true">→</span></button></div>
+            <div class="explainer-progress" aria-hidden="true"><span></span></div>
+            <p class="dialog-sound-note">Original motion graphic · No sound</p>
+        </div>
+    </dialog>
+</body>
+</html>

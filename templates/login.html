@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% set show_shell = false %}
+{% block title %}Sign In - FraudGuard{% endblock %}
+{% block head %}
+<style>
+    .auth-main {
+        position: relative;
+        overflow: hidden;
+        background:
+            radial-gradient(ellipse at 15% 15%, rgba(23,107,91,0.12), transparent 34%),
+            var(--canvas);
+    }
+    .login-layout {
+        display: grid;
+        width: min(100%, 66rem);
+        min-height: min(43rem, calc(100vh - 2rem));
+        grid-template-columns: minmax(0, 1.08fr) minmax(20rem, 0.92fr);
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 1.25rem;
+        background: var(--surface);
+        box-shadow: 0 1.5rem 4rem rgba(23,43,50,0.12);
+    }
+    .login-story {
+        position: relative;
+        isolation: isolate;
+        display: flex;
+        min-height: 100%;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        padding: clamp(2rem, 5vw, 3.5rem);
+        background:
+            radial-gradient(ellipse at 70% 20%, rgba(57,148,133,0.25), transparent 42%),
+            linear-gradient(145deg, #102b32, #123d40 58%, #10262f);
+        color: #f5fbf9;
+    }
+    .login-story::after {
+        position: absolute;
+        z-index: -1;
+        inset: 0;
+        background: repeating-linear-gradient(130deg, transparent 0 44px, rgba(208,239,231,0.025) 45px 46px);
+        content: "";
+        pointer-events: none;
+    }
+    .login-story-top, .login-story-bottom { position: relative; z-index: 1; }
+    .login-brand { display: inline-flex; align-items: center; gap: 0.7rem; color: #f5fbf9; font-size: 1rem; font-weight: 700; text-decoration: none; }
+    .login-brand-mark { display: grid; width: 2.45rem; aspect-ratio: 1; place-items: center; border: 1px solid rgba(220,242,236,0.2); border-radius: 0.7rem; background: rgba(235,249,245,0.1); color: #b6e3d8; font-size: 1.15rem; }
+    .login-eyebrow { margin-top: clamp(3rem, 10vh, 6rem); color: #9ed5c9; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+    .login-story h1 { max-width: 29rem; margin: 0.85rem 0 0; color: #f5fbf9; font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1.06; }
+    .login-story-copy { max-width: 28rem; margin-top: 1rem; color: #c2d5d3; font-size: 0.94rem; line-height: 1.7; }
+    .login-network { display: block; width: min(100%, 28rem); height: auto; margin: 1rem auto 0; overflow: visible; }
+    .login-network path { stroke-dasharray: 6 9; animation: login-flow 18s linear infinite; }
+    .login-network circle { transform-box: fill-box; transform-origin: center; animation: login-pulse 4s ease-in-out infinite; }
+    .login-network circle:nth-of-type(2n) { animation-delay: -1.4s; }
+    .login-network circle:nth-of-type(3n) { animation-delay: -2.7s; }
+    .login-story-note { color: #a7c3be; font-size: 0.74rem; }
+    .login-form-side { display: flex; flex-direction: column; justify-content: center; padding: clamp(1.5rem, 4vw, 3rem); }
+    .login-home-link { align-self: flex-end; color: var(--muted); font-size: 0.78rem; text-decoration: none; }
+    .login-home-link:hover { color: var(--accent); }
+    .login-form-content { width: 100%; max-width: 24rem; margin: auto; }
+    .login-form-content h2 { margin: 0; color: var(--ink); font-size: 1.65rem; font-weight: 700; letter-spacing: -0.035em; }
+    .login-form-subtitle { margin: 0.45rem 0 1.65rem; color: var(--muted); font-size: 0.86rem; }
+    .login-mark { display: grid; width: 2.8rem; aspect-ratio: 1; place-items: center; margin-bottom: 1.2rem; border: 1px solid rgba(23,107,91,0.12); border-radius: 0.8rem; background: rgba(23,107,91,0.08); color: var(--accent); font-size: 1.2rem; }
+    .login-form-content .form-control { min-height: 2.9rem; }
+    .login-form-content .btn-primary { min-height: 2.9rem; }
+    .login-roles { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; margin-top: 1.2rem; }
+    .login-roles-label { width: 100%; margin-bottom: 0.1rem; color: var(--muted); font-size: 0.72rem; }
+    .login-role { padding: 0.35rem 0.6rem; border: 1px solid var(--line); border-radius: 999px; background: var(--canvas); color: var(--muted); font-size: 0.68rem; font-weight: 600; }
+    @keyframes login-flow { to { stroke-dashoffset: -180; } }
+    @keyframes login-pulse { 0%, 100% { opacity: 0.72; transform: scale(0.94); } 50% { opacity: 1; transform: scale(1.08); } }
+    @media (max-width: 760px) {
+        .login-layout { max-width: 31rem; min-height: auto; grid-template-columns: minmax(0, 1fr); }
+        .login-story { min-height: 18rem; padding: 1.5rem; }
+        .login-eyebrow { margin-top: 2rem; }
+        .login-story h1 { max-width: 24rem; font-size: 2.2rem; }
+        .login-story-copy { max-width: 25rem; margin-top: 0.7rem; font-size: 0.84rem; }
+        .login-network { position: absolute; right: -3rem; bottom: -3rem; width: 15rem; opacity: 0.35; }
+        .login-story-note { display: none; }
+        .login-form-side { min-height: 26rem; padding: 1.5rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .login-network path, .login-network circle { animation: none; }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<section class="login-layout" aria-label="FraudGuard sign in">
+    <aside class="login-story">
+        <div class="login-story-top">
+            <a href="{{ url_for('landing_page') }}" class="login-brand">
+                <span class="login-brand-mark"><i class="bi bi-shield-check" aria-hidden="true"></i></span>
+                <span>FraudGuard</span>
+            </a>
+            <div class="login-eyebrow"><i class="bi bi-activity me-1" aria-hidden="true"></i>Merchant risk intelligence</div>
+            <h1>See the connections before fraud happens.</h1>
+            <p class="login-story-copy">Bring graph signals, clear risk decisions, and investigation workflows together in one place.</p>
+        </div>
+        <svg class="login-network" viewBox="0 0 460 180" aria-hidden="true">
+            <g fill="none" stroke="rgba(151,211,199,0.48)" stroke-width="1.5">
+                <path d="M22 104 92 44 164 93 231 34 306 88 371 44 438 105"/>
+                <path d="M22 104 98 144 164 93 231 145 306 88 365 141 438 105"/>
+                <path d="M92 44 98 144M231 34v111M371 44l-6 97"/>
+            </g>
+            <g>
+                <circle cx="22" cy="104" r="7" fill="#68c7ad"/>
+                <circle cx="92" cy="44" r="9" fill="#d19524"/>
+                <circle cx="98" cy="144" r="7" fill="#6f9bc4"/>
+                <circle cx="164" cy="93" r="12" fill="#db6a57"/>
+                <circle cx="231" cy="34" r="8" fill="#68c7ad"/>
+                <circle cx="231" cy="145" r="8" fill="#6f9bc4"/>
+                <circle cx="306" cy="88" r="12" fill="#d19524"/>
+                <circle cx="371" cy="44" r="8" fill="#68c7ad"/>
+                <circle cx="365" cy="141" r="7" fill="#db6a57"/>
+                <circle cx="438" cy="105" r="9" fill="#6f9bc4"/>
+            </g>
+        </svg>
+        <div class="login-story-bottom"><span class="login-story-note">Network-led signals · Explainable scoring · Human review</span></div>
+    </aside>
+    <div class="login-form-side">
+        <a class="login-home-link" href="{{ url_for('landing_page') }}"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to home</a>
+        <div class="login-form-content">
+            <div class="login-mark"><i class="bi bi-shield-lock" aria-hidden="true"></i></div>
+            <h2>Welcome back</h2>
+            <p class="login-form-subtitle">Sign in to your risk operations workspace.</p>
+            {% if error %}
+            <div class="alert alert-danger py-2 small" role="alert">{{ error }}</div>
+            {% endif %}
+            <form method="POST" action="{{ url_for('login', next=next_url) if next_url else url_for('login') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" autocomplete="username" required autofocus>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>Sign In to Platform</button>
+            </form>
+            <div class="login-roles" aria-label="Available roles">
+                <span class="login-roles-label">Workspace access roles</span>
+                <span class="login-role">Admin</span>
+                <span class="login-role">Investigator</span>
+                <span class="login-role">Analyst</span>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

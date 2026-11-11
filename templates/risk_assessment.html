@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% set page_key = "risk" %}
+{% block title %}Risk Assessment - FraudGuard{% endblock %}
+{% block page_title %}Risk Assessment{% endblock %}
+{% block page_subtitle %}Stored decision, reasons, and graph evidence{% endblock %}
+{% block content %}
+{% if lookup_mode %}
+<div class="page-heading">
+    <h1>Find a merchant assessment</h1>
+    <p>Enter a merchant ID to open its latest stored risk assessment.</p>
+</div>
+<section class="card">
+    <div class="card-header"><span>Merchant lookup</span><i class="bi bi-search text-secondary" aria-hidden="true"></i></div>
+    <div class="card-body">
+        {% if error %}<div class="state-message state-error mb-3" role="alert"><i class="bi bi-exclamation-circle"></i>{{ error }}</div>{% endif %}
+        <form class="row g-3" method="get" action="{{ url_for('risk_lookup') }}">
+            <div class="col-12 col-md-8">
+                <label class="form-label" for="merchant_id">Merchant ID</label>
+                <input class="form-control" id="merchant_id" name="merchant_id" value="{{ merchant_id or '' }}" required>
+            </div>
+            <div class="col-12 col-md-4 d-flex align-items-end">
+                <button class="btn btn-primary w-100" type="submit"><i class="bi bi-search me-1" aria-hidden="true"></i>Find assessment</button>
+            </div>
+        </form>
+        <div class="mt-4 pt-3 border-top">
+            <span class="small text-muted fw-bold d-block mb-2">QUICK TEST PRESETS:</span>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-sm btn-outline-danger" href="{{ url_for('risk_assessment', merchant_id='M_00013') }}"><i class="bi bi-bank me-1"></i>Bank Ring (M_00013)</a>
+                <a class="btn btn-sm btn-outline-warning" href="{{ url_for('risk_assessment', merchant_id='M_00022') }}"><i class="bi bi-phone me-1"></i>Device Ring (M_00022)</a>
+                <a class="btn btn-sm btn-outline-danger" href="{{ url_for('risk_assessment', merchant_id='M_00119') }}"><i class="bi bi-diagram-3 me-1"></i>Multi-Entity Ring (M_00119)</a>
+                <a class="btn btn-sm btn-outline-warning" href="{{ url_for('risk_assessment', merchant_id='M_00029') }}"><i class="bi bi-person-exclamation me-1"></i>Mimic Solo (M_00029)</a>
+                <a class="btn btn-sm btn-outline-success" href="{{ url_for('risk_assessment', merchant_id='M_00001') }}"><i class="bi bi-check-circle me-1"></i>Genuine Clean (M_00001)</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% elif error or not assessment %}
+<div class="page-heading">
+    <h1>Risk Assessment</h1>
+    <p>Merchant ID: {{ merchant_id }}</p>
+</div>
+<section class="card">
+    <div class="card-body">
+        <div class="state-message state-error" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ error or "No assessment is available for this merchant." }}</div>
+        <a class="btn btn-outline-secondary btn-sm mt-2" href="{{ url_for('risk_lookup') }}">Find another merchant</a>
+    </div>
+</section>
+{% else %}
+<div class="page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <div>
+        <h1>Risk Assessment</h1>
+        <p>Merchant ID: <strong>{{ assessment.merchant_id }}</strong></p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{{ url_for('network_explorer', merchant_id=assessment.merchant_id) }}" title="Inspect connections in Fraud Network Explorer">
+            <i class="bi bi-diagram-3 me-1" aria-hidden="true"></i>Open in Fraud Network
+        </a>
+        {% if assessment.decision in ['Hold', 'Review'] %}
+        <a class="btn btn-outline-warning" href="{{ url_for('alerts_page') }}" title="View operational alerts">
+            <i class="bi bi-bell me-1" aria-hidden="true"></i>View in Alerts
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<section class="row g-3 mb-4" aria-label="Assessment summary">
+    <div class="col-12 col-lg-4">
+        <article class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+                <div><div class="stat-value">{{ "%.1f%%"|format(assessment.risk_score * 100) }}</div><div class="stat-label">Fraud risk score</div></div>
+                {% set decision_class = 'risk-hold' if assessment.decision == 'Hold' else 'risk-review' if assessment.decision == 'Review' else 'risk-approve' %}
+                <span class="risk-badge {{ decision_class }}">{{ assessment.decision }}</span>
+            </div>
+            <div class="progress risk-track mt-3" role="progressbar" aria-label="Fraud risk score" aria-valuenow="{{ (assessment.risk_score * 100)|round|int }}" aria-valuemin="0" aria-valuemax="100">
+                <div class="risk-bar {{ decision_class }}" style="width: {{ [0, [assessment.risk_score * 100, 100]|min]|max }}%"></div>
+            </div>
+        </div></article>
+    </div>
+    <div class="col-12 col-lg-4">
+        <article class="card h-100"><div class="card-body">
+            <div class="stat-value fs-5">{{ assessment.model_version or "Not recorded" }}</div><div class="stat-label">Model version</div>
+        </div></article>
+    </div>
+    <div class="col-12 col-lg-4">
+        <article class="card h-100"><div class="card-body">
+            <div class="stat-value fs-5">{{ assessment.evaluated_at or "Not recorded" }}</div><div class="stat-label">Evaluated at</div>
+        </div></article>
+    </div>
+</section>
+
+<section class="row g-3 mb-4">
+    <div class="col-12 col-xl-5">
+        <article class="card h-100">
+            <div class="card-header"><span>Reasons</span></div>
+            <div class="card-body">
+                {% if assessment.reasons %}
+                <ol class="mb-0">{% for reason in assessment.reasons %}<li class="mb-2">{{ reason }}</li>{% endfor %}</ol>
+                {% else %}<div class="state-message state-empty"><i class="bi bi-inbox"></i>No reasons were recorded.</div>{% endif %}
+            </div>
+        </article>
+    </div>
+    <div class="col-12 col-xl-7">
+        {% set evidence = assessment.graph_evidence or {} %}
+        <article class="card h-100">
+            <div class="card-header"><span>Graph evidence</span><i class="bi bi-diagram-3 text-secondary" aria-hidden="true"></i></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6 col-md-3"><div class="fw-bold">{{ evidence.bank_share_count or 0 }}</div><div class="stat-label">Shared bank</div></div>
+                    <div class="col-6 col-md-3"><div class="fw-bold">{{ evidence.device_share_count or 0 }}</div><div class="stat-label">Shared device</div></div>
+                    <div class="col-6 col-md-3"><div class="fw-bold">{{ evidence.ip_share_count or 0 }}</div><div class="stat-label">Shared IP</div></div>
+                    <div class="col-6 col-md-3"><div class="fw-bold">{{ evidence.flagged_peer_merchants or 0 }}</div><div class="stat-label">Flagged peers</div></div>
+                    <div class="col-12"><div class="fw-bold">{{ "%.1f%%"|format((evidence.community_fraud_risk or 0) * 100) }}</div><div class="stat-label">Community fraud risk</div></div>
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+{% set connected_entities = evidence.connected_entities or [] %}
+{% set shared_merchants = (evidence.shared_merchants or [])[:20] %}
+<section class="row g-3">
+    <div class="col-12 col-xl-5">
+        <article class="card h-100">
+            <div class="card-header"><span>Connected entities</span><span class="text-secondary small">{{ connected_entities|length }}</span></div>
+            <div class="card-body p-0">
+                {% if connected_entities %}
+                <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Entity type</th><th>Entity ID</th><th>Relationship</th></tr></thead><tbody>
+                    {% for entity in connected_entities %}<tr><td>{{ entity.entity_type }}</td><td class="font-monospace">{{ entity.entity_id }}</td><td>{{ entity.relationship }}</td></tr>{% endfor %}
+                </tbody></table></div>
+                {% else %}<div class="state-message state-empty px-3"><i class="bi bi-inbox"></i>No connected entities recorded.</div>{% endif %}
+            </div>
+        </article>
+    </div>
+    <div class="col-12 col-xl-7">
+        <article class="card h-100">
+            <div class="card-header"><span>Shared merchants</span><span class="text-secondary small">{{ shared_merchants|length }} / 20 max</span></div>
+            <div class="card-body p-0">
+                {% if shared_merchants %}
+                <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Merchant ID</th><th>Entity</th><th>Type</th><th>Fraud label</th></tr></thead><tbody>
+                    {% for merchant in shared_merchants %}<tr><td>{{ merchant.merchant_id }}</td><td class="font-monospace">{{ merchant.entity_id }}</td><td>{{ merchant.entity_type }}</td><td>{% if merchant.fraud_label == 1 %}<span class="risk-badge risk-hold">Flagged</span>{% elif merchant.fraud_label == 0 %}<span class="risk-badge risk-approve">Not flagged</span>{% else %}<span class="text-secondary">Unknown</span>{% endif %}</td></tr>{% endfor %}
+                </tbody></table></div>
+                {% else %}<div class="state-message state-empty px-3"><i class="bi bi-inbox"></i>No shared merchants recorded.</div>{% endif %}
+            </div>
+        </article>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
